@@ -12,47 +12,62 @@ public:
 		while(true) {
 			Lock lock(mMutex);
 			Message* msg = recieveMessage();
+			cout <<(int)getID() <<" Message from " <<(int)msg->sender->getID() <<endl;
 			switch(msg->type) {
 				case MsgType::BoolMsgType:
-					cout <<"Bool: " <<(msg->boolMsg.value?"true":"false") <<endl;
+					cout <<(int)getID() <<" Bool: " <<(msg->boolMsg.value?"true":"false") <<endl;
+					if(!msg->boolMsg.value) {
+						cout <<(int)getID() <<" waiting" <<endl;
+						Timer::sleep(10000);
+					}
 					break;
 				case MsgType::StringMsgType:
-					cout <<"String: \"" <<msg->stringMsg.value <<"\"" <<endl;
+					cout <<(int)getID() <<" String: \"" <<msg->stringMsg.value <<"\"" <<endl;
 					break;
 			}
+			delete msg;
 			lock.unlock();
 		}
 	}
 };
 
 class TestProducer : public MessageClient {
+	MessageClient* mReceiver;
 public:
+	TestProducer(MessageClient* receiver) : mReceiver(receiver) {}
+
 	void operator()() {
-		for(int a = 5; a < 6; ++a) {
-			BoolMsg bmsg;
-			bmsg.value = true;
-			sendMessage(bmsg, 0, 0);
-			bmsg.value = false;
-			sendMessage(bmsg, 0, 0);
-			StringMsg smsg;
-			smsg.value = "muffins";
-			sendMessage(smsg, 0, 0);
-		}
+		cout <<(int)getID() <<" Sending messages to " <<(int)mReceiver->getID() <<endl;
+		BoolMsg bmsg;
+		bmsg.value = true;
+		cout <<(int)getID() <<" Sending true bool" <<endl;
+		sendMessage(bmsg, mReceiver, false);
+		bmsg.value = false;
+		cout <<(int)getID() <<" Sending false bool" <<endl;
+		sendMessage(bmsg, mReceiver);
+		StringMsg smsg;
+		smsg.value = "muffins";
+		cout <<(int)getID() <<" Sending string" <<endl;
+		sendMessage(smsg, mReceiver, false);
 	}
 };
 
 int main(int argc, char** argv) {
 	Channel<Message*>::setup();
-	int csize = 1;
-	int psize = 1;
-	TestConsumer* c = new TestConsumer[csize];
-	TestProducer* p = new TestProducer[psize];
-	boost::thread** cthreads = new boost::thread*[csize];
-	boost::thread** pthreads = new boost::thread*[psize];
-	for(int a = 0; a < csize; ++a)
-		cthreads[a] = new boost::thread(TestConsumer());
-	for(int a = 0; a < psize; ++a)
-		pthreads[a] = new boost::thread(TestProducer());
+	//int csize = 1;
+	//int psize = 1;
+	//TestConsumer* c = new TestConsumer[csize];
+	//TestProducer* p = new TestProducer[psize];
+	//boost::thread** cthreads = new boost::thread*[csize];
+	//boost::thread** pthreads = new boost::thread*[psize];
+	TestConsumer tc;
+	TestProducer tp(&tc);
+	boost::thread* cthread = new boost::thread(tc);
+	boost::thread* pthread = new boost::thread(tp);
+	//for(int a = 0; a < csize; ++a)
+	//	cthreads[a] = new boost::thread(TestConsumer());
+	//for(int a = 0; a < psize; ++a)
+	//	pthreads[a] = new boost::thread(TestProducer());
 	while(true) {
 		Timer::sleep(1);
 	}

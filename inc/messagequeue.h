@@ -53,7 +53,7 @@ public:
 
 struct Message;
 
-template <class T>
+/*template <class T>
 class ConsumeWorker {
 public:
 	static void exit() {
@@ -77,7 +77,7 @@ public:
 private:
 	boost::mutex mExitMutex;
 	bool mDoExit;
-};
+};*/
 
 struct BoolMsg {
 	bool value;
@@ -107,11 +107,22 @@ namespace MsgType {
 	};
 }
 
-class Entity;
+class MessageClient;
+
 struct Message {
-	Entity* sender;
-	Entity* reciever;
+	void done() {
+		if(async)
+			waitCondition.notify_all();
+	}
+	~Message() {
+		done();
+	}
+	MessageClient* sender;
+	MessageClient* reciever;
 	MsgType::MsgTypeEnum type;
+	bool async;
+	boost::condition_variable waitCondition;
+	boost::mutex mMutex;
 	union {
 		BoolMsg boolMsg;
 		StringMsg stringMsg;
@@ -121,29 +132,48 @@ struct Message {
 };
 
 class MessageClient : public Consumer<Message*>, public Producer<Message*> {
+	static uint8 lastID;
+	uint8 mID;
 public:
+	MessageClient() : mID(lastID++) {}
+
+	uint8 getID() { return mID; }
+
 	Message* recieveMessage() {
 		return consume();
 	}
-	void sendMessage(BoolMsg& data, Entity* sender, Entity* reciever) {
-		Message* msg = new Message();
-		msg->sender = sender;
-		msg->reciever = reciever;
-		msg->type = MsgType::BoolMsgType;
-		msg->boolMsg = data;
-		produce(msg);
+	void sendMessage(BoolMsg& data,MessageClient* reciever, bool async = true) {
+		if(async) {
+			Message* msg = new Message();
+			msg->sender = this;
+			msg->reciever = reciever;
+			msg->type = MsgType::BoolMsgType;
+			msg->boolMsg = data;
+			produce(msg);
+			boost::unique_lock<boost::mutex> lock(msg->mMutex);
+			msg->waitCondition.wait(lock);
+		}
+		else {
+			Message* msg = new Message();
+			msg->sender = this;
+			msg->reciever = reciever;
+			msg->type = MsgType::BoolMsgType;
+			msg->boolMsg = data;
+			produce(msg);
+		}
 	}
-	void sendMessage(StringMsg& data, Entity* sender, Entity* reciever) {
+
+	void sendMessage(StringMsg& data, MessageClient* reciever, bool async = true) {
 		Message* msg = new Message();
-		msg->sender = sender;
+		msg->sender = this;
 		msg->reciever = reciever;
 		msg->type = MsgType::StringMsgType;
 		msg->stringMsg = data;
 		produce(msg);
 	}
-	void sendMessage(DataMsg& data, Entity* sender, Entity* reciever) {
+	void sendMessage(DataMsg& data, MessageClient* reciever, bool async = true) {
 		Message* msg = new Message();
-		msg->sender = sender;
+		msg->sender = this;
 		msg->reciever = reciever;
 		msg->type = MsgType::DataMsgType;
 		msg->dataMsg = data;

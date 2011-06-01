@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\main.cpp" />
+    <ClCompile Include="..\..\src\messagequeue.cpp" />
     <ClCompile Include="..\..\src\win32\timer.cpp" />
   </ItemGroup>
   <ItemGroup>
