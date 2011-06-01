@@ -53,6 +53,7 @@ Message* MessageClient::sendReply(Message* previous, BoolMsg& data, bool async, 
 			return reply;
 		}
 	}
+	return 0;
 }
 
 void MessageClient::sendMessage(StringMsg& data, MessageClient* receiver, bool async) {

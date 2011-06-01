@@ -19,12 +19,12 @@ public:
 	void operator()() {
 		while(true) {
 			Message* msg = receiveMessage();
-			cout <<(int)getID() <<" Message from " <<(int)msg->sender->getID() <<endl;
+			cout <<(int)getID() <<": Message from " <<(int)msg->sender->getID() <<endl;
 			switch(msg->type) {
 				case MsgType::BoolMsgType:
-					cout <<(int)getID() <<" Bool: " <<(msg->boolMsg.value?"true":"false") <<endl;
+					cout <<(int)getID() <<": Bool: " <<(msg->boolMsg.value?"true":"false") <<endl;
 					if(!msg->boolMsg.value) {
-						cout <<(int)getID() <<" processing bool" <<endl;
+						cout <<(int)getID() <<": Processing bool" <<endl;
 						for(int i = 0; i < 3; ++i) {
 							cout <<".";
 							Timer::sleep(3000);
@@ -34,25 +34,18 @@ public:
 					else {
 						BoolMsg data;
 						data.value = false;
-						cout  <<(int)getID() <<"Sending reply" <<endl;
+						cout  <<(int)getID() <<": Sending reply" <<endl;
 						sendReply(msg, data);
 					}
 					break;
 				case MsgType::StringMsgType:
-					cout <<(int)getID() <<" String: \"" <<msg->stringMsg.value <<"\"" <<endl;
+					cout <<(int)getID() <<": String: \"" <<msg->stringMsg.value <<"\"" <<endl;
 					break;
 				case MsgType::DataMsgType:
-					cout <<(int)getID() <<" Data: ";
+					cout <<(int)getID() <<": Data: ";
 					container c;
 					memcpy(&c, msg->dataMsg.data, msg->dataMsg.length);
 					cout <<"i = " <<c.i <<", c = " <<c.c <<endl;
-					
-					/*container c2(c.i + 2, 'F');
-					DataMsg dmsg;
-					dmsg.data = new uint8[sizeof(container)];
-					dmsg.length = sizeof(container);
-					memcpy(dmsg.data, &c2, sizeof(container));
-					sendReply(msg, dmsg);*/
 					break;
 			}
 			delete msg; //we're done with it
@@ -66,25 +59,22 @@ public:
 	TestProducer(MessageClient* receiver) : mReceiver(receiver) {}
 
 	void operator()() {
-		cout <<(int)getID() <<" Sending messages to " <<(int)mReceiver->getID() <<endl;
+		cout <<(int)getID() <<": Sending messages to " <<(int)mReceiver->getID() <<endl;
 		BoolMsg bmsg;
 		bmsg.value = true;
-		cout <<(int)getID() <<" Sending true bool" <<endl;
+		cout <<(int)getID() <<": Sending true bool" <<endl;
 		Message* reply = sendMessage(bmsg, mReceiver, false, true);
 		if(reply != 0) {
-			cout <<"Got reply to first msg: " <<reply->boolMsg.value <<endl;
+			cout  <<(int)getID() <<": Got reply to first msg: " <<reply->boolMsg.value <<endl;
 		}
 
 		bmsg.value = false;
-		cout <<(int)getID() <<" Sending false bool" <<endl;
-		reply = sendMessage(bmsg, mReceiver);
-		if(reply != 0) {
-			cout <<"Got reply to second msg: " <<reply->boolMsg.value <<endl;
-		}
+		cout <<(int)getID() <<": Sending false bool" <<endl;
+		sendMessage(bmsg, mReceiver);
 
 		StringMsg smsg;
 		smsg.value = "muffins";
-		cout <<(int)getID() <<" Sending string" <<endl;
+		cout <<(int)getID() <<": Sending string" <<endl;
 		sendMessage(smsg, mReceiver, false);
 		
 		DataMsg dmsg;
@@ -92,7 +82,7 @@ public:
 		dmsg.length = sizeof(container);
 		container c(12, 'D');
 		memcpy(dmsg.data, &c, sizeof(container));
-		cout <<(int)getID() <<" Sending data" <<endl;
+		cout <<(int)getID() <<": Sending data" <<endl;
 		sendMessage(dmsg, mReceiver);
 	}
 };

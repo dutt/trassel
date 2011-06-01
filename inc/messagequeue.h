@@ -109,8 +109,6 @@ struct Message {
 	bool async;
 	boost::condition_variable waitCondition;
 	boost::mutex mMutex;
-
-	bool waitForReply;
 };
 
 //
