@@ -23,6 +23,9 @@
     <ClInclude Include="..\..\inc\timer.h" />
     <ClInclude Include="..\..\inc\typedefs.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\readme.txt" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{6AEECAC1-8644-4698-A4A5-BE7998151ADB}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
