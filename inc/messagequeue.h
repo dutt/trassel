@@ -7,8 +7,7 @@
 #include "singelton.h"
 
 //
-// Non-directed
-
+// Non-directed messages
 template<class T>
 class Channel : public Singleton<Channel<T> > {
 public:
@@ -33,7 +32,7 @@ public:
 	}
 private:
 	boost::condition_variable mEmptyCondition;
-	typedef boost::unique_lock<boost::mutex> lock;
+	//typedef boost::unique_lock<boost::mutex> lock;
 	boost::mutex mMutex;
 	std::queue<T> mQueue;
 };
@@ -56,7 +55,6 @@ public:
 
 //
 // Messages
-
 struct BoolMsg {
 	bool value;
 	static const uint32 len = sizeof(bool);
@@ -68,12 +66,12 @@ struct StringMsg {
 };
 
 struct IntMsg {
-	int value;
+	uint32 value;
 };
 
 struct DataMsg {
-	void* data;
-	int length;
+	void* value;
+	uint32 len;
 };
 
 namespace MsgType {
@@ -112,8 +110,7 @@ struct Message {
 };
 
 //
-// Directed
-
+// Directed message channel
 class DirectedProducer {
 public:
 	void produce(Message* data);
@@ -123,6 +120,7 @@ class DirectedConsumer {
 public:
 	Message* consume(uint8 id);
 };
+
 
 class MessageClient : public DirectedConsumer, public DirectedProducer {
 	static uint8 lastID;
@@ -134,49 +132,70 @@ public:
 	MessageClient() : mID(lastID++) {}
 
 	uint8 getID() { return mID; }
-	
+
 	Message* receiveMessage();
 	Message* sendMessage(BoolMsg& data,MessageClient* receiver, bool async = true, bool waitForReply = false);
 	Message* sendReply(Message* previous, BoolMsg& data, bool async = true, bool waitForReply = false);
 	Message* sendMessage(StringMsg& data, MessageClient* receiver, bool async = true, bool waitForReply = false);
 	Message* sendMessage(DataMsg& data, MessageClient* receiver, bool async = true, bool waitForReply = false);
-	
 };
 
 class DirectedChannel : public Singleton<DirectedChannel> {
 public:
 	static void setup() {
 		mInstance = new DirectedChannel();
+		mInstance->mQuit = false;
+	}
+	static void shutdown() {
+		mInstance->close();
 	}
 	void push(Message* data) {
 		boost::unique_lock<boost::mutex> mlock(mMutex);
+		if(mQuit) {
+			throw std::exception("Directed channel is shutting down");
+			return;
+		}
 		mList.push_back(data);
 		mlock.unlock();
 		mEmptyCondition.notify_one();
 	}
 	Message* pop(uint8 id) {
 		boost::unique_lock<boost::mutex> mlock(mMutex);
-		bool found = false;
-		Message* ret;
-		while(!found) {
-			while(mList.empty())
-				mEmptyCondition.wait(mlock);
-			for(std::list<Message*>::iterator it = mList.begin(); it != mList.end(); ++it) {
-				if((*it)->receiver->getID() == id) {
-					ret = *it;
-					mList.erase(it);
-					found = true;
-					break;
+		if(mQuit) {
+			return 0;
+		}
+		else {
+			bool found = false;
+			Message* ret;
+			while(!found) {
+				while(mList.empty() && !mQuit)
+					mEmptyCondition.wait(mlock);
+				if(mQuit)
+					return 0;
+				for(std::list<Message*>::iterator it = mList.begin(); it != mList.end(); ++it) {
+					if((*it)->receiver->getID() == id) {
+						ret = *it;
+						mList.erase(it);
+						found = true;
+						break;
+					}
 				}
 			}
+			return ret;
 		}
-		return ret;
 		mlock.unlock();
 	}
 private:
+	void close() {
+		ulock mlock(mMutex);
+		mQuit = true;
+		mEmptyCondition.notify_all();
+	}
+	bool mQuit;
 	boost::condition_variable mEmptyCondition;
-	typedef boost::unique_lock<boost::mutex> lock;
+	//typedef boost::unique_lock<boost::mutex> lock;
 	boost::mutex mMutex;
+	typedef boost::unique_lock<boost::mutex> ulock;
 	std::list<Message*> mList;
 };
 

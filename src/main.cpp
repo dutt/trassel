@@ -19,13 +19,17 @@ public:
 	void operator()() {
 		while(true) {
 			Message* msg = receiveMessage();
+			if(msg == 0) {
+				cout <<(int)getID() <<": Shutting down" <<endl;
+				return;
+			}
 			cout <<(int)getID() <<": Message from " <<(int)msg->sender->getID() <<endl;
 			switch(msg->type) {
 				case MsgType::BoolMsgType:
 					cout <<(int)getID() <<": Bool: " <<(msg->boolMsg.value?"true":"false") <<endl;
 					if(!msg->boolMsg.value) {
-						cout <<(int)getID() <<": Processing bool" <<endl;
-						for(int i = 0; i < 3; ++i) {
+						cout <<(int)getID() <<": Processing bool";
+						for(int i = 0; i < 2; ++i) {
 							cout <<".";
 							Timer::sleep(3000);
 						}
@@ -39,12 +43,18 @@ public:
 					}
 					break;
 				case MsgType::StringMsgType:
+					cout <<(int)getID() <<": Processing string";
+					for(int i = 0; i < 2; ++i) {
+						cout <<".";
+						Timer::sleep(3000);
+					}
+					cout <<"done" <<endl;
 					cout <<(int)getID() <<": String: \"" <<msg->stringMsg.value <<"\"" <<endl;
 					break;
 				case MsgType::DataMsgType:
 					cout <<(int)getID() <<": Data: ";
 					container c;
-					memcpy(&c, msg->dataMsg.data, msg->dataMsg.length);
+					memcpy(&c, msg->dataMsg.value, msg->dataMsg.len);
 					cout <<"i = " <<c.i <<", c = " <<c.c <<endl;
 					break;
 			}
@@ -59,53 +69,59 @@ public:
 	TestProducer(MessageClient* receiver) : mReceiver(receiver) {}
 
 	void operator()() {
-		cout <<(int)getID() <<": Sending messages to " <<(int)mReceiver->getID() <<endl;
-		BoolMsg bmsg;
-		bmsg.value = true;
-		cout <<(int)getID() <<": Sending true bool" <<endl;
-		Message* reply = sendMessage(bmsg, mReceiver, false, true);
-		if(reply != 0) {
-			cout  <<(int)getID() <<": Got reply to first msg: " <<reply->boolMsg.value <<endl;
+		try {
+			cout <<(int)getID() <<": Sending messages to " <<(int)mReceiver->getID() <<endl;
+			BoolMsg bmsg;
+			bmsg.value = true;
+			cout <<(int)getID() <<": Sending true bool" <<endl;
+			Message* reply = sendMessage(bmsg, mReceiver, false, true);
+			if(reply != 0) {
+				cout  <<(int)getID() <<": Got reply to first msg: " <<reply->boolMsg.value <<endl;
+			}
+			delete reply;
+		} catch(std::exception ex) {
+			cout <<"Failed to send true bool" <<endl;
 		}
 
-		bmsg.value = false;
-		cout <<(int)getID() <<": Sending false bool" <<endl;
-		sendMessage(bmsg, mReceiver);
-
-		StringMsg smsg;
-		smsg.value = "muffins";
-		cout <<(int)getID() <<": Sending string" <<endl;
-		sendMessage(smsg, mReceiver, false);
+		try {
+			BoolMsg bmsg;
+			bmsg.value = false;
+			cout <<(int)getID() <<": Sending false bool" <<endl;
+			sendMessage(bmsg, mReceiver);
+		} catch(std::exception ex) {
+			cout <<"Failed to send false bool" <<endl;
+		}
 		
-		DataMsg dmsg;
-		dmsg.data = new uint8[sizeof(container)];
-		dmsg.length = sizeof(container);
-		container c(12, 'D');
-		memcpy(dmsg.data, &c, sizeof(container));
-		cout <<(int)getID() <<": Sending data" <<endl;
-		sendMessage(dmsg, mReceiver);
+		try {
+			StringMsg smsg;
+			smsg.value = "muffins";
+			cout <<(int)getID() <<": Sending string" <<endl;
+			sendMessage(smsg, mReceiver, false);
+		} catch(std::exception ex) {
+			cout <<"Failed to send string msg" <<endl;
+		}
+		
+		try {
+			DataMsg dmsg;
+			dmsg.value = new uint8[sizeof(container)];
+			dmsg.len = sizeof(container);
+			container c(12, 'D');
+			memcpy(dmsg.value, &c, sizeof(container));
+			cout <<(int)getID() <<": Sending data" <<endl;
+			sendMessage(dmsg, mReceiver);
+		} catch(std::exception ex) {
+			cout <<"Failed to send data msg" <<endl;
+		}
 	}
 };
 
 int main(int argc, char** argv) {
 	//Channel<Message*>::setup();
 	DirectedChannel::setup();
-	//int csize = 1;
-	//int psize = 1;
-	//TestConsumer* c = new TestConsumer[csize];
-	//TestProducer* p = new TestProducer[psize];
-	//boost::thread** cthreads = new boost::thread*[csize];
-	//boost::thread** pthreads = new boost::thread*[psize];
 	TestConsumer tc;
 	TestProducer tp(&tc);
 	boost::thread* cthread = new boost::thread(tc);
 	boost::thread* pthread = new boost::thread(tp);
-	//for(int a = 0; a < csize; ++a)
-	//	cthreads[a] = new boost::thread(TestConsumer());
-	//for(int a = 0; a < psize; ++a)
-	//	pthreads[a] = new boost::thread(TestProducer());
-	while(true) {
-		Timer::sleep(1);
-	}
+	Timer::sleep(15000);
+	DirectedChannel::shutdown();
 }
-
