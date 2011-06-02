@@ -18,8 +18,8 @@ class TestConsumer : public MessageClient {
 public:
 	void operator()() {
 		while(true) {
-			Message* msg = receiveMessage();
-			if(msg == 0) {
+			Message msg = receiveMessage();
+			if(!msg) {
 				cout <<(int)getID() <<": Shutting down" <<endl;
 				return;
 			}
@@ -58,7 +58,7 @@ public:
 					cout <<"i = " <<c.i <<", c = " <<c.c <<endl;
 					break;
 			}
-			delete msg; //we're done with it
+			msg->done();
 		}
 	}
 };
@@ -74,11 +74,9 @@ public:
 			BoolMsg bmsg;
 			bmsg.value = true;
 			cout <<(int)getID() <<": Sending true bool" <<endl;
-			Message* reply = sendMessage(bmsg, mReceiver, false, true);
-			if(reply != 0) {
-				cout  <<(int)getID() <<": Got reply to first msg: " <<reply->boolMsg.value <<endl;
-			}
-			delete reply;
+			Message reply = sendMessage(bmsg, mReceiver, false, true);
+			cout  <<(int)getID() <<": Got reply to first msg: " <<reply->boolMsg.value <<endl;
+			reply->done();
 		} catch(std::exception ex) {
 			cout <<"Failed to send true bool" <<endl;
 		}
@@ -121,6 +119,7 @@ int main(int argc, char** argv) {
 	TestProducer tp(&tc);
 	boost::thread* cthread = new boost::thread(tc);
 	boost::thread* pthread = new boost::thread(tp);
-	Timer::sleep(15000);
+	Timer::sleep(18000);
 	DirectedChannel::shutdown();
+	Timer::sleep(500); //wait for final console output
 }

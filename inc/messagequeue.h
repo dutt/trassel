@@ -84,18 +84,21 @@ namespace MsgType {
 }
 
 class MessageClient;
-struct Message {
+struct MessageS;
+typedef std::shared_ptr<MessageS> Message;
+
+struct MessageS {
 	void done() {
 		if(async)
 			waitCondition.notify_all();
 	}
-	~Message() {
+	~MessageS() {
 		done();
 	}
 	MessageClient* sender;
 	MessageClient* receiver;
-	Message* next; //next is the reply to this message
-	Message* previous; //this message is the reply to previous
+	Message next; //next is the reply to this message
+	Message previous; //this message is the reply to previous
 	MsgType::MsgTypeEnum type;
 	union {
 		BoolMsg boolMsg;
@@ -113,12 +116,12 @@ struct Message {
 // Directed message channel
 class DirectedProducer {
 public:
-	void produce(Message* data);
+	void produce(Message data);
 };
 
 class DirectedConsumer {
 public:
-	Message* consume(uint8 id);
+	Message consume(uint8 id);
 };
 
 
@@ -126,18 +129,18 @@ class MessageClient : public DirectedConsumer, public DirectedProducer {
 	static uint8 lastID;
 	uint8 mID;
 
-	Message* createMessage(MessageClient* receiver, MsgType::MsgTypeEnum type);
-	Message* waitAsync(Message* msg, bool waitForReply);
+	Message createMessage(MessageClient* receiver, MsgType::MsgTypeEnum type);
+	Message waitAsync(Message msg, bool waitForReply);
 public:
 	MessageClient() : mID(lastID++) {}
 
 	uint8 getID() { return mID; }
 
-	Message* receiveMessage();
-	Message* sendMessage(BoolMsg& data,MessageClient* receiver, bool async = true, bool waitForReply = false);
-	Message* sendReply(Message* previous, BoolMsg& data, bool async = true, bool waitForReply = false);
-	Message* sendMessage(StringMsg& data, MessageClient* receiver, bool async = true, bool waitForReply = false);
-	Message* sendMessage(DataMsg& data, MessageClient* receiver, bool async = true, bool waitForReply = false);
+	Message receiveMessage();
+	Message sendMessage(BoolMsg& data,MessageClient* receiver, bool async = true, bool waitForReply = false);
+	Message sendReply(Message previous, BoolMsg& data, bool async = true, bool waitForReply = false);
+	Message sendMessage(StringMsg& data, MessageClient* receiver, bool async = true, bool waitForReply = false);
+	Message sendMessage(DataMsg& data, MessageClient* receiver, bool async = true, bool waitForReply = false);
 };
 
 class DirectedChannel : public Singleton<DirectedChannel> {
@@ -149,7 +152,7 @@ public:
 	static void shutdown() {
 		mInstance->close();
 	}
-	void push(Message* data) {
+	void push(Message data) {
 		boost::unique_lock<boost::mutex> mlock(mMutex);
 		if(mQuit) {
 			throw std::exception("Directed channel is shutting down");
@@ -159,21 +162,23 @@ public:
 		mlock.unlock();
 		mEmptyCondition.notify_one();
 	}
-	Message* pop(uint8 id) {
+	Message pop(uint8 id) {
 		boost::unique_lock<boost::mutex> mlock(mMutex);
 		if(mQuit) {
 			return 0;
 		}
 		else {
 			bool found = false;
-			Message* ret;
+			Message ret;
 			while(!found) {
 				while(mList.empty() && !mQuit)
 					mEmptyCondition.wait(mlock);
 				if(mQuit)
 					return 0;
-				for(std::list<Message*>::iterator it = mList.begin(); it != mList.end(); ++it) {
-					if((*it)->receiver->getID() == id) {
+				for(std::list<Message>::iterator it = mList.begin(); it != mList.end(); ++it) {
+					Message msg = *it;
+					MessageClient* client = msg->receiver;
+					if(client->getID() == id) {
 						ret = *it;
 						mList.erase(it);
 						found = true;
@@ -196,7 +201,7 @@ private:
 	//typedef boost::unique_lock<boost::mutex> lock;
 	boost::mutex mMutex;
 	typedef boost::unique_lock<boost::mutex> ulock;
-	std::list<Message*> mList;
+	std::list<Message> mList;
 };
 
 #endif //_MESSAGEQUEUE_
