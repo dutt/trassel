@@ -16,7 +16,7 @@ You have either nondirected messages, you just send them and they are received o
 directed messages. Then you address the messages to the receiver and they will wait in the channel until the receiver checks.
 
 Before you do anything you need call setup() on your channel and when you'rer done shutdown().
-
+ 
 Messages can be sent in two ways:
 Asynchronously, send it and go on doing your thing.
 Synchronously, the send operation doesn't return until the receiver has handled the message.
