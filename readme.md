@@ -26,6 +26,11 @@ Messages can be sent in two ways:
 
 Default operating mode is to send asynchronously and return directly, not waiting for the message to be handled or replied to.
 
+Other
+-----
+Each MessageClient is automatically assigned an ID and this is how the directed channel keep tracks on which message should be received by
+which client. If you want to see which ID your client has you can retrieve it through getID().
+
 Examples
 --------
 For a more complete example see src/main.cpp.

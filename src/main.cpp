@@ -116,7 +116,6 @@ public:
 };
 
 int main(int argc, char** argv) {
-	//Channel<Message*>::setup();
 	DirectedChannel::setup();
 	TestConsumer tc;
 	TestProducer tp(&tc);
