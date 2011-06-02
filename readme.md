@@ -24,6 +24,8 @@ Messages can be sent in two ways:
 	If you do send it synchronously you can wait for the reply which is returned from the send-function.
 	The receiver in turn may wait for a new reply from you and so on.
 
+Default operating mode is to send asynchronously and return directly, not waiting for the message to be handled or replied to.
+
 Examples
 --------
 For a more complete example see src/main.cpp.
@@ -49,6 +51,5 @@ Synd message and wait for reply. This assumes the reply is a BoolMsg, in reality
 	cout <<(int)getID() <<": Sending string" <<endl;
     Message* reply = sendMessage(bmsg, mReceiver, false, true);
     if(reply != 0) {
-    	cout  <<(int)getID() <<": Got reply: " <<reply->boolMsg.value <<endl;
+    	cout  <<(int)getID() <<": Got reply, was our message handled successfully? " (<<reply->boolMsg.value?"yes":"no") <<endl;
     }
-
