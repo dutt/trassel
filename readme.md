@@ -13,35 +13,48 @@ A message can contain a plain old data, bool, int and so on, or anything in a vo
 Usage
 -----
 You have either nondirected messages, you just send them and they are received on a first-come-first-served basis, or you can have
-directed messages. Then you address the messages to the receiver and they will wait in the channel until the receiver checks.
+directed messages. Then you address the messages to the receiver and they will wait in the channel until the receiver checks for a message.
 
-Before you do anything you need call setup() on your channel and when you'rer done shutdown().
+Before you do anything you need call setup() on your channel and when you're done shutdown().
  
 Messages can be sent in two ways:
-Asynchronously, send it and go on doing your thing.
-Synchronously, the send operation doesn't return until the receiver has handled the message.
+
+* Asynchronously: Send it and go on doing your thing.
+* Synchronously: The send operation doesn't return until the receiver has handled the message.
 	If you do send it synchronously you can wait for the reply which is returned from the send-function.
 	The receiver in turn may wait for a new reply from you and so on.
 
+Default operating mode is to send asynchronously and return directly, not waiting for the message to be handled or replied to.
+
+Other
+-----
+Each MessageClient is automatically assigned an ID and this is how the directed channel keep tracks on which message should be received by
+which client. If you want to see which ID your client has you can retrieve it through getID().
+
 Examples
 --------
+For a more complete example see src/main.cpp.
+
 Send async message, continue working directly:
     
+	BoolMsg bmsg;
 	bmsg.value = false;
     cout <<(int)getID() <<": Sending false bool" <<endl;
     sendMessage(bmsg, mReceiver);
 
 Send message - wait until handled:
     
-	sendMessage(msg) - async
-    sendMessage(msg, true) - sync, wait until handled.
+	BoolMsg bmsg;
+	bmsg.value = true;
+	cout <<(int)getID() <<": Sending true bool" <<endl;
+	sendMessage(bmsg, mReceiver, false);
 
-Synd message and wait for reply:
+Synd message and wait for reply. This assumes the reply is a BoolMsg, in reality you'd check what kind of message you got:
 
-    BoolMsg bmsg;
-    bmsg.value = true;
-    cout <<(int)getID() <<": Sending true bool" <<endl;
+    StringMsg smsg;
+	smsg.value = "muffins";
+	cout <<(int)getID() <<": Sending string" <<endl;
     Message* reply = sendMessage(bmsg, mReceiver, false, true);
     if(reply != 0) {
-    	cout  <<(int)getID() <<": Got reply to first msg: " <<reply->boolMsg.value <<endl;
+    	cout  <<(int)getID() <<": Got reply, was our message handled successfully? " (<<reply->boolMsg.value?"yes":"no") <<endl;
     }
