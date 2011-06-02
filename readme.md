@@ -61,3 +61,7 @@ Synd message and wait for reply. This assumes the reply is a BoolMsg, in reality
     if(reply != 0) {
     	cout  <<(int)getID() <<": Got reply, was our message handled successfully? " (<<reply->boolMsg.value?"yes":"no") <<endl;
     }
+
+TOOD
+----
+Not sure, got any ideas?
