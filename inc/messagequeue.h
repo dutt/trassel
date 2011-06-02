@@ -15,13 +15,13 @@ public:
 		mInstance = new Channel();
 	}
 	void push(T data) {
-		boost::unique_lock<boost::mutex> mlock(mMutex);
+		lock mlock(mMutex);
 		mQueue.push(data);
 		mlock.unlock();
 		mEmptyCondition.notify_one();
 	}
 	T pop() {
-		boost::unique_lock<boost::mutex> mlock(mMutex);
+		lock mlock(mMutex);
 		if(mQueue.empty()) {
 			mEmptyCondition.wait(mlock);
 		}
@@ -32,7 +32,7 @@ public:
 	}
 private:
 	boost::condition_variable mEmptyCondition;
-	//typedef boost::unique_lock<boost::mutex> lock;
+	typedef boost::unique_lock<boost::mutex> lock;
 	boost::mutex mMutex;
 	std::queue<T> mQueue;
 };
@@ -153,7 +153,7 @@ public:
 		mInstance->close();
 	}
 	void push(Message data) {
-		boost::unique_lock<boost::mutex> mlock(mMutex);
+		lock mlock(mMutex);
 		if(mQuit) {
 			throw std::exception("Directed channel is shutting down");
 			return;
@@ -163,7 +163,7 @@ public:
 		mEmptyCondition.notify_one();
 	}
 	Message pop(uint8 id) {
-		boost::unique_lock<boost::mutex> mlock(mMutex);
+		lock mlock(mMutex);
 		if(mQuit) {
 			return 0;
 		}
@@ -192,15 +192,14 @@ public:
 	}
 private:
 	void close() {
-		ulock mlock(mMutex);
+		lock mlock(mMutex);
 		mQuit = true;
 		mEmptyCondition.notify_all();
 	}
 	bool mQuit;
 	boost::condition_variable mEmptyCondition;
-	//typedef boost::unique_lock<boost::mutex> lock;
+	typedef boost::unique_lock<boost::mutex> lock;
 	boost::mutex mMutex;
-	typedef boost::unique_lock<boost::mutex> ulock;
 	std::list<Message> mList;
 };
 
