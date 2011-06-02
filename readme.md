@@ -13,13 +13,14 @@ A message can contain a plain old data, bool, int and so on, or anything in a vo
 Usage
 -----
 You have either nondirected messages, you just send them and they are received on a first-come-first-served basis, or you can have
-directed messages. Then you address the messages to the receiver and they will wait in the channel until the receiver checks.
+directed messages. Then you address the messages to the receiver and they will wait in the channel until the receiver checks for a message.
 
-Before you do anything you need call setup() on your channel and when you'rer done shutdown().
+Before you do anything you need call setup() on your channel and when you're done shutdown().
  
 Messages can be sent in two ways:
-Asynchronously, send it and go on doing your thing.
-Synchronously, the send operation doesn't return until the receiver has handled the message.
+
+* Asynchronously, send it and go on doing your thing.
+* Synchronously, the send operation doesn't return until the receiver has handled the message.
 	If you do send it synchronously you can wait for the reply which is returned from the send-function.
 	The receiver in turn may wait for a new reply from you and so on.
 
