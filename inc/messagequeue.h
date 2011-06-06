@@ -151,7 +151,7 @@ public:
 		}
 		mList.push_back(data);
 		mlock.unlock();
-		mEmptyCondition.notify_one();
+		mEmptyCondition.notify_all();
 	}
 	container_type pop(id_type id) {
 		lock mlock(mMutex);
