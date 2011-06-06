@@ -1,15 +1,9 @@
-#include "messagequeue.h"
+#include "messageclient.h"
 
 uint8 MessageClient::lastID = 0;
 
-void DirectedProducer::produce(Message data) {
-	DirectedChannel::getInstance()->push(data);
-}
-
-Message DirectedConsumer::consume(uint8 id) {
-	return DirectedChannel::getInstance()->pop(id);
-}
-
+template< >
+uint8 getID<Message, uint8>(Message msg) { return msg->receiver->getID(); }
 
 Message MessageClient::receiveMessage() {
 	return consume(mID);
@@ -72,4 +66,15 @@ Message MessageClient::sendMessage(DataMsg& data, MessageClient* receiver, bool 
 		return waitAsync(msg, waitForReply);
 	}
 	return 0;
+}
+
+void Task::operator()() {
+	while(true) {
+		Message msg = receiveMessage();
+		if(!msg) {
+			quit();
+			return;
+		}
+		handleMessage(msg);
+	}
 }

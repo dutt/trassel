@@ -34,6 +34,10 @@ which client. If you want to see which ID your client has you can retrieve it th
 The type Message is a typedef for std::shared_ptr<MessageS> so memory is handled automatically but you access members with 
 operator "->" instead of the usual operator ".".
 
+You can inherit tasks from either MessageClient or Task. 
+Inheritance from Task gives a cleaner interface but each message takes a virtual method call to handle, inheritance from MessageClient on
+the other hand means slightly messier code but on the other hand no virtual call.
+
 Examples
 --------
 For a more complete example see src/main.cpp.
