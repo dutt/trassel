@@ -10,6 +10,13 @@ the more worker threads the more messages can be handled at the same time but th
 
 A message can contain a plain old data, bool, int and so on, or anything in a void*-struct.
 
+Status
+------
+
+Currently trassel is fairly stable, I've tried to keep the feature and line count down to minimise the number of bugs that way.
+
+Probably no major rewrites or changes coming up.
+
 Usage
 -----
 You have either nondirected messages, you just send them and they are received on a first-come-first-served basis, or you can have
