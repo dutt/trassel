@@ -5,6 +5,10 @@ uint8 MessageClient::lastID = 0;
 template< >
 uint8 getID<Message, uint8>(Message msg) { return msg->receiver->getID(); }
 
+MessageClient::MessageClient(uint32 send_timeout): mID(lastID++) {
+	mSendTimeout.sec = send_timeout;
+}
+
 Message MessageClient::receiveMessage() {
 	return consume(mID);
 }
@@ -16,9 +20,16 @@ Message MessageClient::createMessage(MessageClient* receiver, MsgType::MsgTypeEn
 	msg->type = type;
 	return Message(msg);
 }
+
 Message MessageClient::waitAsync(Message msg, bool waitForReply) {
 	boost::unique_lock<boost::mutex> lock(msg->mMutex);
-	msg->waitCondition.wait(lock);
+	if(mSendTimeout.sec == 0)
+		msg->waitCondition.wait(lock);
+	else {
+		bool timeout = msg->waitCondition.timed_wait(lock,  mSendTimeout);
+		if(!timeout)
+			return 0;
+	}
 	if(waitForReply) {
 		Message reply = receiveMessage();
 		return reply;
@@ -26,6 +37,7 @@ Message MessageClient::waitAsync(Message msg, bool waitForReply) {
 	else
 		return 0;
 }
+
 Message MessageClient::sendMessage(BoolMsg& data, MessageClient* receiver, bool async, bool waitForReply) {
 	Message msg = createMessage(receiver, MsgType::BoolMsgType);
 	msg->boolMsg = data;

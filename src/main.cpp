@@ -83,6 +83,7 @@ public:
 				else {
 					BoolMsg data;
 					data.value = false;
+					Timer::sleep(6000);
 					cout  <<(int)getID() <<": Sending reply" <<endl;
 					sendReply(msg, data);
 				}
@@ -112,7 +113,7 @@ public:
 class TestProducer : public MessageClient {
 	MessageClient* mReceiver;
 public:
-	TestProducer(MessageClient* receiver) : mReceiver(receiver) {}
+	TestProducer(MessageClient* receiver) : MessageClient(0), mReceiver(receiver) {}
 
 	void operator()() {
 		try {
@@ -121,12 +122,14 @@ public:
 			bmsg.value = true;
 			cout <<(int)getID() <<": Sending true bool" <<endl;
 			Message reply = sendMessage(bmsg, mReceiver, false, true);
-			cout  <<(int)getID() <<": Got reply to first msg: " <<reply->boolMsg.value <<endl;
-			reply->done();
+			if(reply) {
+				cout  <<(int)getID() <<": Got reply to first msg: " <<reply->boolMsg.value <<endl;
+				reply->done();
+			}
 		} catch(std::exception ex) {
 			cout <<"Failed to send true bool" <<endl;
 		}
-
+		Timer::sleep(2000);
 		try {
 			BoolMsg bmsg;
 			bmsg.value = false;
@@ -135,7 +138,7 @@ public:
 		} catch(std::exception ex) {
 			cout <<"Failed to send false bool" <<endl;
 		}
-		
+		Timer::sleep(2000);
 		try {
 			StringMsg smsg;
 			smsg.value = "muffins";
@@ -144,7 +147,7 @@ public:
 		} catch(std::exception ex) {
 			cout <<"Failed to send string msg" <<endl;
 		}
-		
+		Timer::sleep(2000);
 		try {
 			DataMsg dmsg;
 			dmsg.value = new uint8[sizeof(container)];

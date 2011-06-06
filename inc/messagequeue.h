@@ -174,6 +174,8 @@ public:
 						break;
 					}
 				}
+				mlock.unlock();
+				mlock.lock();
 			}
 			return ret;
 		}
