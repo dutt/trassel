@@ -68,4 +68,9 @@ Synd message and wait for reply. This assumes the reply is a BoolMsg, in reality
 
 TOOD
 ----
-Not sure, got any ideas?
+Support for task groups/pools. Two modes:
+	- Send to group and every memeber get the message(broadcast)
+	- Send to group and the first member to check for message get it(load balancing)
+
+Suspend/Resume
+	Probably require implementation of system(not meant for the tasks)-messages.
