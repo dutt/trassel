@@ -2,6 +2,7 @@
 #define _TYPEDEFS_
 
 typedef unsigned int uint;
+#define PURE =0
 
 #if defined(WIN32) || defined(_WIN32)
 typedef __int8 int8;

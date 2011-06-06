@@ -67,3 +67,14 @@ Message MessageClient::sendMessage(DataMsg& data, MessageClient* receiver, bool 
 	}
 	return 0;
 }
+
+void Task::operator()() {
+	while(true) {
+		Message msg = receiveMessage();
+		if(!msg) {
+			quit();
+			return;
+		}
+		handleMessage(msg);
+	}
+}

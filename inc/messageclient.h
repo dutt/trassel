@@ -21,4 +21,11 @@ public:
 	Message sendMessage(DataMsg& data, MessageClient* receiver, bool async = true, bool waitForReply = false);
 };
 
+class Task : public MessageClient {
+public:
+	void operator()();
+protected:
+	virtual void handleMessage(Message msg) PURE;
+	virtual void quit() { }
+};
 #endif //_MESSAGECLIENT_
