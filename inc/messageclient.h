@@ -29,4 +29,7 @@ protected:
 	virtual void handleMessage(Message msg) PURE;
 	virtual void quit() { }
 };
+
+#define START_TASK(x) new boost::thread(x)
+
 #endif //_MESSAGECLIENT_

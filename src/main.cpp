@@ -31,6 +31,7 @@ public:
 			else {
 				BoolMsg data;
 				data.value = false;
+				Timer::sleep(3000);
 				cout  <<(int)getID() <<": Sending reply" <<endl;
 				sendReply(msg, data);
 			}
@@ -83,7 +84,7 @@ public:
 				else {
 					BoolMsg data;
 					data.value = false;
-					Timer::sleep(6000);
+					Timer::sleep(3000);
 					cout  <<(int)getID() <<": Sending reply" <<endl;
 					sendReply(msg, data);
 				}
@@ -113,7 +114,7 @@ public:
 class TestProducer : public MessageClient {
 	MessageClient* mReceiver;
 public:
-	TestProducer(MessageClient* receiver) : MessageClient(0), mReceiver(receiver) {}
+	TestProducer(MessageClient* receiver) : MessageClient(1), mReceiver(receiver) {}
 
 	void operator()() {
 		try {
@@ -125,6 +126,9 @@ public:
 			if(reply) {
 				cout  <<(int)getID() <<": Got reply to first msg: " <<reply->boolMsg.value <<endl;
 				reply->done();
+			}
+			else {
+				cout <<(int)getID() <<": Reception of reply timed out" <<endl;
 			}
 		} catch(std::exception ex) {
 			cout <<"Failed to send true bool" <<endl;
@@ -167,8 +171,10 @@ int main(int argc, char** argv) {
 	TestConsumer tc;
 	TestTaskConsumer ttc;
 	TestProducer tp(&ttc);
-	boost::thread* cthread = new boost::thread(ttc);
-	boost::thread* pthread = new boost::thread(tp);
+	//new boost::thread(ttc);
+	//new boost::thread(tp);
+	START_TASK(ttc);
+	START_TASK(tp);
 	Timer::sleep(18000);
 	DirectedChannel<Message, uint8>::shutdown();
 	Timer::sleep(500); //wait for final console output
