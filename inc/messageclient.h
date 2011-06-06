@@ -6,11 +6,12 @@
 class MessageClient : public DirectedConsumer<Message, uint8>, public DirectedProducer<Message, uint8> {
 	static uint8 lastID;
 	uint8 mID;
+	boost::xtime mSendTimeout;
 
 	Message createMessage(MessageClient* receiver, MsgType::MsgTypeEnum type);
 	Message waitAsync(Message msg, bool waitForReply);
 public:
-	MessageClient() : mID(lastID++) {}
+	MessageClient(uint32 send_timeout = 0);
 
 	uint8 getID() { return mID; }
 
@@ -28,4 +29,7 @@ protected:
 	virtual void handleMessage(Message msg) PURE;
 	virtual void quit() { }
 };
+
+#define START_TASK(x) new boost::thread(x)
+
 #endif //_MESSAGECLIENT_
