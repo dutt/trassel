@@ -18,7 +18,7 @@
     <ClCompile Include="..\..\src\win32\timer.cpp">
       <Filter>src\win32</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\messagequeue.cpp">
+    <ClCompile Include="..\..\src\messageclient.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -39,6 +39,9 @@
       <Filter>inc</Filter>
     </ClInclude>
     <ClInclude Include="..\..\inc\typedefs.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\messageclient.h">
       <Filter>inc</Filter>
     </ClInclude>
   </ItemGroup>

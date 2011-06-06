@@ -12,11 +12,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\main.cpp" />
-    <ClCompile Include="..\..\src\messagequeue.cpp" />
+    <ClCompile Include="..\..\src\messageclient.cpp" />
     <ClCompile Include="..\..\src\win32\timer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\inc\common.h" />
+    <ClInclude Include="..\..\inc\messageclient.h" />
     <ClInclude Include="..\..\inc\messagequeue.h" />
     <ClInclude Include="..\..\inc\singelton.h" />
     <ClInclude Include="..\..\inc\threadpool.h" />

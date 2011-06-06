@@ -114,36 +114,27 @@ struct MessageS {
 
 //
 // Directed message channel
+template<class container_type, class id_type>
 class DirectedProducer {
 public:
-	void produce(Message data);
+	void produce(container_type data) {
+		DirectedChannel<container_type, id_type>::getInstance()->push(data);
+	}
 };
 
+template<class container_type, class id_type>
 class DirectedConsumer {
 public:
-	Message consume(uint8 id);
+	container_type consume(id_type id) {
+		return DirectedChannel<container_type, id_type>::getInstance()->pop(id);
+	}
 };
 
+template<class container_type, class id_type>
+id_type getID(container_type container) { throw std::exception("Need to create a specifier"); }
 
-class MessageClient : public DirectedConsumer, public DirectedProducer {
-	static uint8 lastID;
-	uint8 mID;
-
-	Message createMessage(MessageClient* receiver, MsgType::MsgTypeEnum type);
-	Message waitAsync(Message msg, bool waitForReply);
-public:
-	MessageClient() : mID(lastID++) {}
-
-	uint8 getID() { return mID; }
-
-	Message receiveMessage();
-	Message sendMessage(BoolMsg& data,MessageClient* receiver, bool async = true, bool waitForReply = false);
-	Message sendReply(Message previous, BoolMsg& data, bool async = true, bool waitForReply = false);
-	Message sendMessage(StringMsg& data, MessageClient* receiver, bool async = true, bool waitForReply = false);
-	Message sendMessage(DataMsg& data, MessageClient* receiver, bool async = true, bool waitForReply = false);
-};
-
-class DirectedChannel : public Singleton<DirectedChannel> {
+template<class container_type, class id_type>
+class DirectedChannel : public Singleton<DirectedChannel<container_type, id_type> > {
 public:
 	static void setup() {
 		mInstance = new DirectedChannel();
@@ -152,7 +143,7 @@ public:
 	static void shutdown() {
 		mInstance->close();
 	}
-	void push(Message data) {
+	void push(container_type data) {
 		lock mlock(mMutex);
 		if(mQuit) {
 			throw std::exception("Directed channel is shutting down");
@@ -162,7 +153,7 @@ public:
 		mlock.unlock();
 		mEmptyCondition.notify_one();
 	}
-	Message pop(uint8 id) {
+	container_type pop(id_type id) {
 		lock mlock(mMutex);
 		if(mQuit) {
 			return 0;
@@ -176,9 +167,7 @@ public:
 				if(mQuit)
 					return 0;
 				for(std::list<Message>::iterator it = mList.begin(); it != mList.end(); ++it) {
-					Message msg = *it;
-					MessageClient* client = msg->receiver;
-					if(client->getID() == id) {
+					if(getID<container_type, id_type>(*it) == id) {
 						ret = *it;
 						mList.erase(it);
 						found = true;
@@ -200,7 +189,7 @@ private:
 	boost::condition_variable mEmptyCondition;
 	typedef boost::unique_lock<boost::mutex> lock;
 	boost::mutex mMutex;
-	std::list<Message> mList;
+	std::list<container_type> mList;
 };
 
 #endif //_MESSAGEQUEUE_

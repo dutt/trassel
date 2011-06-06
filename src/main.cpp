@@ -1,6 +1,5 @@
 #include "timer.h"
-#include "threadpool.h"
-#include "messagequeue.h"
+#include "messageclient.h"
 #include <iostream>
 using namespace std;
 
@@ -114,12 +113,12 @@ public:
 };
 
 int main(int argc, char** argv) {
-	DirectedChannel::setup();
+	DirectedChannel<Message, uint8>::setup();
 	TestConsumer tc;
 	TestProducer tp(&tc);
 	boost::thread* cthread = new boost::thread(tc);
 	boost::thread* pthread = new boost::thread(tp);
 	Timer::sleep(18000);
-	DirectedChannel::shutdown();
+	DirectedChannel<Message, uint8>::shutdown();
 	Timer::sleep(500); //wait for final console output
 }
