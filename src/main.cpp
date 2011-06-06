@@ -62,49 +62,50 @@ public:
 class TestConsumer : public MessageClient {
 public:
 	void operator()() {
-		while(true) {
+		bool keep_running = true;
+		while(keep_running) {
 			Message msg = receiveMessage();
 			if(!msg) {
-				cout <<(int)getID() <<": Shutting down" <<endl;
-				return;
+				break; //stop checking for messages, false message means the system is shutting down.
 			}
 			cout <<(int)getID() <<": Message from " <<(int)msg->sender->getID() <<endl;
 			switch(msg->type) {
-				case MsgType::BoolMsgType:
-					cout <<(int)getID() <<": Bool: " <<(msg->boolMsg.value?"true":"false") <<endl;
-					if(!msg->boolMsg.value) {
-						cout <<(int)getID() <<": Processing bool";
-						for(int i = 0; i < 2; ++i) {
-							cout <<".";
-							Timer::sleep(3000);
-						}
-						cout <<"done" <<endl;
-					}
-					else {
-						BoolMsg data;
-						data.value = false;
-						cout  <<(int)getID() <<": Sending reply" <<endl;
-						sendReply(msg, data);
-					}
-					break;
-				case MsgType::StringMsgType:
-					cout <<(int)getID() <<": Processing string";
+			case MsgType::BoolMsgType:
+				cout <<(int)getID() <<": Bool: " <<(msg->boolMsg.value?"true":"false") <<endl;
+				if(!msg->boolMsg.value) {
+					cout <<(int)getID() <<": Processing bool";
 					for(int i = 0; i < 2; ++i) {
 						cout <<".";
 						Timer::sleep(3000);
 					}
 					cout <<"done" <<endl;
-					cout <<(int)getID() <<": String: \"" <<msg->stringMsg.value <<"\"" <<endl;
-					break;
-				case MsgType::DataMsgType:
-					cout <<(int)getID() <<": Data: ";
-					container c;
-					memcpy(&c, msg->dataMsg.value, msg->dataMsg.len);
-					cout <<"i = " <<c.i <<", c = " <<c.c <<endl;
-					break;
+				}
+				else {
+					BoolMsg data;
+					data.value = false;
+					cout  <<(int)getID() <<": Sending reply" <<endl;
+					sendReply(msg, data);
+				}
+				break;
+			case MsgType::StringMsgType:
+				cout <<(int)getID() <<": Processing string";
+				for(int i = 0; i < 2; ++i) {
+					cout <<".";
+					Timer::sleep(3000);
+				}
+				cout <<"done" <<endl;
+				cout <<(int)getID() <<": String: \"" <<msg->stringMsg.value <<"\"" <<endl;
+				break;
+			case MsgType::DataMsgType:
+				cout <<(int)getID() <<": Data: ";
+				container c;
+				memcpy(&c, msg->dataMsg.value, msg->dataMsg.len);
+				cout <<"i = " <<c.i <<", c = " <<c.c <<endl;
+				break;
 			}
 			msg->done();
 		}
+		cout <<(int)getID() <<": Shutting down" <<endl;
 	}
 };
 
