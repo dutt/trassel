@@ -1,6 +1,8 @@
+#include "timer.h"
+
 #include "common.h"
 
-#include "timer.h"
+using namespace trassel;
 
 uint64 Timer::tick()
 {

@@ -3,12 +3,14 @@
 
 #include "typedefs.h"
 
-class Timer
-{
-public:
-    static uint64 tick();
+namespace trassel {
+	class Timer
+	{
+	public:
+		static uint64 tick();
 
-    static void sleep(uint32 ms);
-};
+		static void sleep(uint32 ms);
+	};
+}
 
 #endif /* TIMER_HPP */
