@@ -7,21 +7,25 @@
 #include "singelton.h"
 
 namespace trassel {
+	template<class value_type, class id_type>
+	class Channel {
+	public:
+		void virtual push(value_type) = 0;
+		value_type virtual pop(id_type) = 0;
+	};
+
 	//
 	// Non-directed messages
 	template<class T>
-	class Channel : public Singleton<Channel<T> > {
+	class NormalChannel : public Channel<T, void> {
 	public:
-		static void setup() {
-			mInstance = new Channel();
-		}
 		void push(T data) {
 			lock mlock(mMutex);
 			mQueue.push(data);
 			mlock.unlock();
 			mEmptyCondition.notify_one();
 		}
-		T pop() {
+		T pop(void) {
 			lock mlock(mMutex);
 			if(mQueue.empty()) {
 				mEmptyCondition.wait(mlock);
@@ -41,17 +45,25 @@ namespace trassel {
 	template<class T>
 	class Producer {
 	public:
+		Producer(Channel<T, void>* channel) : mChannel(channel) {}
 		void produce(T data) {
-			Channel<T>::getInstance()->push(data);
+			mChannel.push(data);
 		}
+		Channel<T, void>& getChannel() { return mChannel; }
+	private:
+		Channel<T, void>& mChannel;
 	};
 
 	template<class T>
 	class Consumer {
 	public:
+		Consumer(Channel<T, void>* channel) : mChannel(channel) {}
 		T consume() {
-			return Channel<T>::getInstance()->pop();
+			return mChannel->pop();
 		}
+		Channel<T, void>& getChannel() { return mChannel; }
+	private:
+		Channel<T, void>& mChannel;
 	};
 
 	//
@@ -115,34 +127,23 @@ namespace trassel {
 
 	//
 	// Directed message channel
-	template<class container_type, class id_type>
-	class DirectedProducer {
-	public:
-		void produce(container_type data) {
-			DirectedChannel<container_type, id_type>::getInstance()->push(data);
-		}
-	};
+	//template<class container_type, class id_type>
+	//id_type getID(container_type container) { throw std::exception("Need to create a specifier"); }
+	typedef boost::unique_lock<boost::mutex> lock;
 
-	template<class container_type, class id_type>
-	class DirectedConsumer {
+	template<class container_type = Message, class id_type = uint8>
+	class DirectedChannel : public Channel<container_type, id_type> {
 	public:
-		container_type consume(id_type id) {
-			return DirectedChannel<container_type, id_type>::getInstance()->pop(id);
+		DirectedChannel() {
+			mQuit = false;
 		}
-	};
-
-	template<class container_type, class id_type>
-	id_type getID(container_type container) { throw std::exception("Need to create a specifier"); }
-
-	template<class container_type, class id_type>
-	class DirectedChannel : public Singleton<DirectedChannel<container_type, id_type> > {
-	public:
-		static void setup() {
-			mInstance = new DirectedChannel();
-			mInstance->mQuit = false;
+		~DirectedChannel() {
+			close();
 		}
-		static void shutdown() {
-			mInstance->close();
+		void close() {
+			lock mlock(mMutex);
+			mQuit = true;
+			mEmptyCondition.notify_all();
 		}
 		void push(container_type data) {
 			lock mlock(mMutex);
@@ -154,6 +155,9 @@ namespace trassel {
 			mlock.unlock();
 			mEmptyCondition.notify_all();
 		}
+		
+		id_type virtual getID(container_type) = 0;
+
 		container_type pop(id_type id) {
 			lock mlock(mMutex);
 			if(mQuit) {
@@ -168,7 +172,7 @@ namespace trassel {
 					if(mQuit)
 						return 0;
 					for(std::list<Message>::iterator it = mList.begin(); it != mList.end(); ++it) {
-						if(getID<container_type, id_type>(*it) == id) {
+						if(getID(*it) == id) {
 							ret = *it;
 							mList.erase(it);
 							found = true;
@@ -183,16 +187,34 @@ namespace trassel {
 			mlock.unlock();
 		}
 	private:
-		void close() {
-			lock mlock(mMutex);
-			mQuit = true;
-			mEmptyCondition.notify_all();
-		}
 		bool mQuit;
 		boost::condition_variable mEmptyCondition;
-		typedef boost::unique_lock<boost::mutex> lock;
 		boost::mutex mMutex;
 		std::list<container_type> mList;
+	};
+
+	template<class container_type = Message, class id_type = uint8>
+	class DirectedProducer {
+	public:
+		DirectedProducer(Channel<container_type, id_type>* channel) : mChannel(channel) {}
+		void produce(container_type data) {
+			mChannel->push(data);
+		}
+		Channel<container_type, id_type>& getChannel() { return mChannel; }
+	private:
+		Channel<container_type, id_type>* mChannel;
+	};
+
+	template<class container_type = Message, class id_type = uint8>
+	class DirectedConsumer {
+	public:
+		DirectedConsumer(Channel<container_type, id_type>* channel) : mChannel(channel) {}
+		container_type consume(id_type id) {
+			return mChannel->pop(id);
+		}
+		Channel<container_type, id_type>& getChannel() { return mChannel; }
+	private:
+		Channel<container_type, id_type>* mChannel;
 	};
 }
 

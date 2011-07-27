@@ -19,10 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\directed_test.cpp" />
-    <ClCompile Include="..\..\src\main.cpp" />
     <ClCompile Include="..\..\src\messageclient.cpp" />
     <ClCompile Include="..\..\src\win32\timer.cpp" />
+    <ClCompile Include="..\..\test\directed_test.cpp" />
+    <ClCompile Include="..\..\test\group_test.cpp" />
+    <ClCompile Include="..\..\test\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\inc\common.h" />
@@ -32,8 +33,8 @@
     <ClInclude Include="..\..\inc\threadpool.h" />
     <ClInclude Include="..\..\inc\timer.h" />
     <ClInclude Include="..\..\inc\typedefs.h" />
-    <ClInclude Include="..\..\src\directed_test.h" />
-    <ClInclude Include="nondirected_test.h" />
+    <ClInclude Include="..\..\test\directed_test.h" />
+    <ClInclude Include="..\..\test\group_test.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\readme.md" />

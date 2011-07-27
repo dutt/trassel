@@ -12,7 +12,7 @@ namespace trassel {
 		Message createMessage(MessageClient* receiver, MsgType::MsgTypeEnum type);
 		Message waitAsync(Message msg, bool waitForReply);
 	public:
-		MessageClient(uint32 send_timeout = 0);
+		MessageClient(Channel<Message, uint8>* channel, uint32 send_timeout = 0);
 
 		uint8 getID() { return mID; }
 
@@ -25,20 +25,56 @@ namespace trassel {
 		Message sendReply(Message previous, DataMsg& data, bool async = true, bool waitForReply = false);
 	};
 
+	class ConcreteDirectedChannel : public DirectedChannel<Message, uint8> {
+	public:
+		uint8 getID(Message msg) { return msg->receiver->getID(); }
+	};
+
 	class Task : public MessageClient {
 	public:
+		Task(Channel<Message, uint8>* channel) : MessageClient(channel) {}
+
 		void operator()();
 	protected:
 		virtual void handleMessage(Message msg) PURE;
 		virtual void quit() { }
 	};
 
-	#define START_TASK(x) new boost::thread(x)
+	//#define START_TASK(x) new boost::thread(x)
 
-	class Group : public MessageClient {
+	namespace GroupMode {
+		enum GroupMode_t {
+			FirstComeFirstServe,
+			Broadcast 
+		};
+	}
+
+	//template< >
+	//uint8 trassel::getID<Message, uint8>(Message msg) { return msg->receiver->getID(); }
+
+	class Group : public Task, public ConcreteDirectedChannel {
 	public:
-		void attach(MessageClient& client);
-		void detach(MessageClient& client);
+		Group(const Group& other);
+		Group(Channel<Message, uint8>* channel, GroupMode::GroupMode_t mode);
+
+		void attach(MessageClient* client);
+		void detach(MessageClient* client);
+		bool isAttached(MessageClient* client);
+
+		void handleMessage(Message msg);
+		void quit();
+
+		void push(Message msg);
+		Message pop(uint8 id);
+	private:
+		Message popInternal(uint8 id, lock& waitLock);
+		std::map<uint8, std::queue<Message> > mClients;
+		typedef std::map<uint8, std::queue<Message> >::iterator ClientIt;
+		GroupMode::GroupMode_t mMode;
+		bool mQuit;
+		boost::condition_variable mEmptyCondition;
+		typedef boost::unique_lock<boost::mutex> lock;
+		boost::mutex mMutex;
 	};
 }
 

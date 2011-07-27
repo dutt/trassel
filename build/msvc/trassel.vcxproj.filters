@@ -11,7 +11,7 @@
       <UniqueIdentifier>{957cfd78-6dcf-43f2-af75-b655cd94a9fa}</UniqueIdentifier>
     </Filter>
     <Filter Include="test">
-      <UniqueIdentifier>{8a6e209a-caa7-401b-a301-c51103ea06a1}</UniqueIdentifier>
+      <UniqueIdentifier>{cfa25aa3-5ae9-4b05-af9f-886ec2c09a5e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -21,10 +21,13 @@
     <ClCompile Include="..\..\src\messageclient.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\directed_test.cpp">
+    <ClCompile Include="..\..\test\directed_test.cpp">
       <Filter>test</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\main.cpp">
+    <ClCompile Include="..\..\test\group_test.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\main.cpp">
       <Filter>test</Filter>
     </ClCompile>
   </ItemGroup>
@@ -50,10 +53,10 @@
     <ClInclude Include="..\..\inc\messageclient.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\directed_test.h">
+    <ClInclude Include="..\..\test\directed_test.h">
       <Filter>test</Filter>
     </ClInclude>
-    <ClInclude Include="nondirected_test.h">
+    <ClInclude Include="..\..\test\group_test.h">
       <Filter>test</Filter>
     </ClInclude>
   </ItemGroup>
