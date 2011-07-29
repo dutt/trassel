@@ -1,4 +1,4 @@
-#include "messageclient.h"
+#include "group.h"
 
 class TestGroupConsumer : public trassel::MessageClient {
 public:

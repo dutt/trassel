@@ -53,13 +53,13 @@ public:
 struct id_collection {
 	id_collection(trassel::uint8 gc1, trassel::uint8 gc2, trassel::uint8 tc1, trassel::uint8 tpg, trassel::uint8 tpc) {
 		gc1_id = gc1;
-		dtc_id = gc2;
+		producer_id = gc2;
 		dp_id = tc1;
 		tpg_id = tpg;
 		tpc_id = tpc;
 	}
 	trassel::uint8 gc1_id;
-	trassel::uint8 dtc_id;
+	trassel::uint8 producer_id;
 	trassel::uint8 dp_id;
 	trassel::uint8 tpg_id;
 	trassel::uint8 tpc_id;
@@ -81,7 +81,7 @@ bool validate_producers_broadcast(vector<int>& output, id_collection& ids) {
 		else if(output[a] == ids.tpg_id) {
 			group_produced += 2;
 		}
-		else if(output[a] == ids.gc1_id || output[a] == ids.dtc_id) {
+		else if(output[a] == ids.gc1_id || output[a] == ids.producer_id) {
 			group_consumed++;
 		}
 		else if(output[a] == ids.dp_id)
@@ -122,7 +122,7 @@ bool validate_producers_first(vector<int>& output, id_collection& ids) {
 		else if(output[a] == ids.tpg_id) {
 			group_produced++;
 		}
-		else if(output[a] == ids.gc1_id || output[a] == ids.dtc_id) {
+		else if(output[a] == ids.gc1_id || output[a] == ids.producer_id) {
 			group_consumed++;
 		}
 		else if(output[a] == ids.dp_id)
@@ -147,9 +147,9 @@ bool validate_producers_first(vector<int>& output, id_collection& ids) {
 	return success;
 }
 
-void group_test() {
+bool test_helper(trassel::GroupMode::GroupMode_t mode) {
 	ConcreteDirectedChannel channel;
-	Group group(&channel, trassel::GroupMode::FirstComeFirstServe);
+	Group group(&channel, mode);
 	GroupRunner groupRunner(&group);
 	TestGroupConsumer gc1(&group);
 	TestGroupConsumer gc2(&group);
@@ -175,12 +175,30 @@ void group_test() {
 	Timer::sleep(100); //wait for console output
 	bool success = false;
 	if(group.getMode() == GroupMode::Broadcast)
-		success = validate_producers_broadcast(groupOutput, coll);
+		return validate_producers_broadcast(groupOutput, coll);
 	else
-		success = validate_producers_first(groupOutput, coll);
+		return validate_producers_first(groupOutput, coll);
 
-	if(success)
+}
+bool test_FIFO() {
+	return test_helper(GroupMode::FIFO);
+}
+
+bool test_broadast() {
+	return test_helper(GroupMode::Broadcast);
+}
+
+void group_test() {
+	bool fifo = test_FIFO();
+	groupOutput.clear();
+	bool broadcast = test_broadast();
+	if(fifo && broadcast) {
 		cout <<"Test succeeded" <<endl;
-	else
-		cout <<"Test failed" <<endl;
+	}
+	else {
+		if(!fifo)
+			cout <<"FIFO Group messaging failed" <<endl;
+		if(!broadcast)
+			cout <<"Broadcast Group messaging failed" <<endl;
+	}
 }

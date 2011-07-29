@@ -19,22 +19,19 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\group.cpp" />
     <ClCompile Include="..\..\src\messageclient.cpp" />
     <ClCompile Include="..\..\src\win32\timer.cpp" />
-    <ClCompile Include="..\..\test\directed_test.cpp" />
-    <ClCompile Include="..\..\test\group_test.cpp" />
-    <ClCompile Include="..\..\test\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\inc\common.h" />
+    <ClInclude Include="..\..\inc\group.h" />
     <ClInclude Include="..\..\inc\messageclient.h" />
     <ClInclude Include="..\..\inc\messagequeue.h" />
     <ClInclude Include="..\..\inc\singelton.h" />
     <ClInclude Include="..\..\inc\threadpool.h" />
     <ClInclude Include="..\..\inc\timer.h" />
     <ClInclude Include="..\..\inc\typedefs.h" />
-    <ClInclude Include="..\..\test\directed_test.h" />
-    <ClInclude Include="..\..\test\group_test.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\readme.md" />
@@ -95,6 +92,7 @@
     <IncludePath>..\..\inc;C:\Users\dutt\code\boost_1_46_1;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Users\dutt\code\boost_1_46_1\stage\lib;$(LibraryPath)</LibraryPath>
     <TargetName>$(ProjectName).dbg</TargetName>
+    <OutDir>..\..\bin\Debug\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -106,6 +104,7 @@
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>..\..\inc;C:\Users\dutt\code\boost_1_46_1;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;</IncludePath>
     <LibraryPath>C:\Users\dutt\code\boost_1_46_1\stage\lib;$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSdkDir)lib;$(FrameworkSDKDir)\lib</LibraryPath>
+    <OutDir>..\..\bin\Release\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

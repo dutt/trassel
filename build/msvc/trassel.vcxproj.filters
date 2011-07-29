@@ -10,9 +10,6 @@
     <Filter Include="inc">
       <UniqueIdentifier>{957cfd78-6dcf-43f2-af75-b655cd94a9fa}</UniqueIdentifier>
     </Filter>
-    <Filter Include="test">
-      <UniqueIdentifier>{cfa25aa3-5ae9-4b05-af9f-886ec2c09a5e}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\win32\timer.cpp">
@@ -21,14 +18,8 @@
     <ClCompile Include="..\..\src\messageclient.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\test\directed_test.cpp">
-      <Filter>test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\test\group_test.cpp">
-      <Filter>test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\test\main.cpp">
-      <Filter>test</Filter>
+    <ClCompile Include="..\..\src\group.cpp">
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -53,11 +44,8 @@
     <ClInclude Include="..\..\inc\messageclient.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\test\directed_test.h">
-      <Filter>test</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\test\group_test.h">
-      <Filter>test</Filter>
+    <ClInclude Include="..\..\inc\group.h">
+      <Filter>inc</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

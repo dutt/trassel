@@ -19,11 +19,10 @@ void TestDirectedTaskConsumer::handleMessage(Message msg) {
 	case MsgType::BoolMsgType:
 		cout <<(int)getID() <<": Bool: " <<(msg->boolMsg.value?"true":"false") <<endl;
 		if(!msg->boolMsg.value) {
-			log(41);
+			log(5);
 			cout <<(int)getID() <<": Processing bool";
 			for(int i = 0; i < 2; ++i) {
 				cout <<".";
-				Timer::sleep(500);
 			}
 			cout <<"done" <<endl;
 		}
@@ -37,20 +36,19 @@ void TestDirectedTaskConsumer::handleMessage(Message msg) {
 		break;
 	case MsgType::StringMsgType:
 		cout <<(int)getID() <<": Processing string";
+		log(6);
 		for(int i = 0; i < 2; ++i) {
 			cout <<".";
-			Timer::sleep(500);
 		}
 		cout <<"done" <<endl;
 		cout <<(int)getID() <<": String: \"" <<msg->stringMsg.value <<"\"" <<endl;
-		log(5);
 		break;
 	case MsgType::DataMsgType:
 		cout <<(int)getID() <<": Data: ";
 		container c;
 		memcpy(&c, msg->dataMsg.value, msg->dataMsg.len);
 		cout <<"i = " <<c.i <<", c = " <<c.c <<endl;
-		log(71);
+		log(9);
 		break;
 	}
 	msg->done();
@@ -72,18 +70,18 @@ void TestDirectedConsumer::operator()() {
 		case MsgType::BoolMsgType:
 			cout <<(int)getID() <<": Bool: " <<(msg->boolMsg.value?"true":"false") <<endl;
 			if(!msg->boolMsg.value) {
+				log(5);
 				cout <<(int)getID() <<": Processing bool";
 				for(int i = 0; i < 2; ++i) {
 					cout <<".";
-					Timer::sleep(500);
 				}
 				cout <<"done" <<endl;
 			}
 			else {
 				BoolMsg data;
 				data.value = false;
-				Timer::sleep(500);
 				cout  <<(int)getID() <<": Sending reply" <<endl;
+				log(2);
 				sendReply(msg, data);
 			}
 			break;
@@ -91,16 +89,17 @@ void TestDirectedConsumer::operator()() {
 			cout <<(int)getID() <<": Processing string";
 			for(int i = 0; i < 2; ++i) {
 				cout <<".";
-				Timer::sleep(3000);
 			}
 			cout <<"done" <<endl;
 			cout <<(int)getID() <<": String: \"" <<msg->stringMsg.value <<"\"" <<endl;
+			log(6);
 			break;
 		case MsgType::DataMsgType:
 			cout <<(int)getID() <<": Data: ";
 			container c;
 			memcpy(&c, msg->dataMsg.value, msg->dataMsg.len);
 			cout <<"i = " <<c.i <<", c = " <<c.c <<endl;
+			log(9);
 			break;
 		}
 		msg->done();
@@ -114,8 +113,8 @@ void TestDirectedProducer::operator()() {
 		BoolMsg bmsg;
 		bmsg.value = true;
 		cout <<(int)getID() <<": Sending true bool" <<endl;
-		Message reply = sendMessage(bmsg, mReceiver, false, true);
 		log(1);
+		Message reply = sendMessage(bmsg, mReceiver, false, true);
 		if(reply) {
 			cout  <<(int)getID() <<": Got reply to first msg: " <<reply->boolMsg.value <<endl;
 			log(3);
@@ -127,27 +126,25 @@ void TestDirectedProducer::operator()() {
 	} catch(std::exception ex) {
 		cout <<"Failed to send true bool" <<endl;
 	}
-	Timer::sleep(2000);
 	try {
 		BoolMsg bmsg;
 		bmsg.value = false;
 		cout <<(int)getID() <<": Sending false bool async" <<endl;
+		log(4);
 		sendMessage(bmsg, mReceiver);
-		log(42);
 	} catch(std::exception ex) {
 		cout <<"Failed to send false bool" <<endl;
 	}
-	Timer::sleep(2000);
 	try {
 		StringMsg smsg;
 		smsg.value = "muffins";
 		cout <<(int)getID() <<": Sending string sync" <<endl;
+		log(5);
 		sendMessage(smsg, mReceiver, false);
-		log(6);
+		log(7);
 	} catch(std::exception ex) {
 		cout <<"Failed to send string msg" <<endl;
 	}
-	Timer::sleep(2000);
 	try {
 		DataMsg dmsg;
 		dmsg.value = new uint8[sizeof(container)];
@@ -155,43 +152,83 @@ void TestDirectedProducer::operator()() {
 		container c(12, 'D');
 		memcpy(dmsg.value, &c, sizeof(container));
 		cout <<(int)getID() <<": Sending data" <<endl;
+		log(8);
 		sendMessage(dmsg, mReceiver);
-		log(72);
+		log(9);
 	} catch(std::exception ex) {
 		cout <<"Failed to send data msg" <<endl;
 	}
 }
 
 struct id_collection {
-	id_collection(trassel::uint8 dc, trassel::uint8 dtc, trassel::uint8 dp) {
-		dc_id = dc;
-		dtc_id = dtc;
-		dp_id = dp;
+	id_collection(trassel::uint8 consumer, trassel::uint8 producer) {
+		consumer_id = consumer;
+		producer_id = producer;
 	}
-	trassel::uint8 dc_id;
-	trassel::uint8 dtc_id;
-	trassel::uint8 dp_id;
+	trassel::uint8 consumer_id;
+	trassel::uint8 producer_id;
 };
 
-void directed_test() {
-	//DirectedChannel<Message, uint8> channel;
+bool verify() {
+	int max_found = 0;
+	for(uint32 a = 0; a < directedOutput.size(); ++a) {
+		if(directedOutput[a] < max_found) { //the numbers should not go down, 
+											//then something is out of order
+			cout <<"Item " <<a <<" was too late." <<endl;
+			return false;
+		}
+		else if(directedOutput[a] > max_found)
+			max_found = directedOutput[a];
+	}
+	return true;
+}
+
+bool test_directed_task() {
 	ConcreteDirectedChannel channel;
-	TestDirectedConsumer dc(&channel);
-	TestDirectedTaskConsumer dtc(&channel);
-	TestDirectedProducer dp(&channel, &dc);
-	new boost::thread(dc);
-	new boost::thread(dp);
-	id_collection ids(dc.getID(), dtc.getID(), dp.getID());
-	//START_TASK(ttc);
-	//START_TASK(tp);
-	//int debug_stop = 1;
-	//while(debug_stop) {}
-	Timer::sleep(18000);
+	TestDirectedTaskConsumer consumer(&channel);
+	TestDirectedProducer producer(&channel, &consumer);
+	new boost::thread(consumer);
+	new boost::thread(producer);
+	id_collection ids(consumer.getID(), producer.getID());
+	Timer::sleep(100);
 	channel.close();
-	Timer::sleep(500); //wait for final console output
+	Timer::sleep(100); //wait for final console output
 	lock mlock(directedOutputMutex);
 	for(uint32 a = 0; a < directedOutput.size(); ++a)
 		cout <<directedOutput[a] <<", ";
 	cout <<endl;
-	Timer::sleep(18000);
+	return verify();
+}
+
+bool test_directed_client() {
+	ConcreteDirectedChannel channel;
+	TestDirectedConsumer consumer(&channel);
+	TestDirectedProducer producer(&channel, &consumer);
+	new boost::thread(consumer);
+	new boost::thread(producer);
+	id_collection ids(consumer.getID(), producer.getID());
+	Timer::sleep(100); //wait for messages to be processed
+	channel.close();
+	Timer::sleep(10); //wait for final console output
+	lock mlock(directedOutputMutex);
+	for(uint32 a = 0; a < directedOutput.size(); ++a)
+		cout <<directedOutput[a] <<", ";
+	cout <<endl;
+	return verify();
+}
+
+void directed_test() {
+	bool client = test_directed_client();
+	directedOutput.clear();
+	bool task = test_directed_task();
+	if(client && task) {
+		cout <<"Test successful" <<endl;
+	}
+	else {
+		if(!client)
+			cout <<"Test of MessageClient failed" <<endl;
+		if(!task)
+			cout <<"Test of Task failed" <<endl;
+	}
+	directedOutput.clear();
 }
