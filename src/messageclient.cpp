@@ -2,16 +2,14 @@
 using namespace trassel;
 
 using namespace std;
+
 using namespace boost;
 
 uint8 MessageClient::lastID = 0;
 
 MessageClient::MessageClient(Channel<Message, uint8>* channel, uint32 send_timeout)
-	: DirectedConsumer(channel), DirectedProducer(channel), mID(lastID++)
-{
-	mSendTimeout.sec = send_timeout * 10;
-	mSendTimeout.nsec = 0;
-}
+	: DirectedConsumer(channel), DirectedProducer(channel), mID(lastID++), mSendTimeout(0, 0, send_timeout)
+{ }
 
 Message MessageClient::receiveMessage() {
 	return consume(mID);
@@ -25,24 +23,19 @@ Message MessageClient::createMessage(MessageClient* receiver, MsgType::MsgTypeEn
 	return Message(msg);
 }
 
+struct Message_Has_Reply {
+	Message msg;
+	Message_Has_Reply(Message sent_message) : msg(sent_message) {}
+	bool operator()() const {
+		return msg->next != 0;
+	}
+};
 Message MessageClient::waitAsync(Message msg, bool waitForReply) {
 	unique_lock<boost::mutex> lock(msg->mMutex);
-	if(mSendTimeout.sec == 0)
+	if(mSendTimeout.seconds() == 0)
 		msg->waitCondition.wait(lock);
 	else {
-		bool timeout = false;
-		while(msg->next == 0) {
-			timeout = msg->waitCondition.timed_wait(lock,  mSendTimeout);
-			lock.unlock();
-			lock.lock();
-			if(msg->next != 0)
-				timeout = true;
-		}
-
-		//this works
-		//bool timeout = true;
-		//msg->waitCondition.wait(lock);
-		if(!timeout)
+		if(!msg->waitCondition.timed_wait(lock, mSendTimeout, Message_Has_Reply(msg)))
 			return 0;
 	}
 	if(waitForReply) {
