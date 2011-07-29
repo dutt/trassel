@@ -2,13 +2,15 @@
 using namespace trassel;
 
 using namespace std;
+using namespace boost;
 
 uint8 MessageClient::lastID = 0;
 
 MessageClient::MessageClient(Channel<Message, uint8>* channel, uint32 send_timeout)
 	: DirectedConsumer(channel), DirectedProducer(channel), mID(lastID++)
 {
-	mSendTimeout.sec = send_timeout;
+	mSendTimeout.sec = send_timeout * 10;
+	mSendTimeout.nsec = 0;
 }
 
 Message MessageClient::receiveMessage() {
@@ -24,11 +26,22 @@ Message MessageClient::createMessage(MessageClient* receiver, MsgType::MsgTypeEn
 }
 
 Message MessageClient::waitAsync(Message msg, bool waitForReply) {
-	boost::unique_lock<boost::mutex> lock(msg->mMutex);
+	unique_lock<boost::mutex> lock(msg->mMutex);
 	if(mSendTimeout.sec == 0)
 		msg->waitCondition.wait(lock);
 	else {
-		bool timeout = msg->waitCondition.timed_wait(lock,  mSendTimeout);
+		bool timeout = false;
+		while(msg->next == 0) {
+			timeout = msg->waitCondition.timed_wait(lock,  mSendTimeout);
+			lock.unlock();
+			lock.lock();
+			if(msg->next != 0)
+				timeout = true;
+		}
+
+		//this works
+		//bool timeout = true;
+		//msg->waitCondition.wait(lock);
 		if(!timeout)
 			return 0;
 	}
@@ -52,7 +65,9 @@ Message MessageClient::sendMessage(BoolMsg& data, MessageClient* receiver, bool 
 
 Message MessageClient::sendReply(Message previous, BoolMsg& data, bool async, bool waitForReply) {
 	Message msg = createMessage(previous->sender, MsgType::BoolMsgType);
+	unique_lock<boost::mutex> lock(previous->mMutex);
 	previous->next = msg;
+	lock.unlock();
 	msg->previous = previous;
 	msg->boolMsg = data;
 	produce(msg);

@@ -101,13 +101,16 @@ namespace trassel {
 	typedef std::shared_ptr<MessageS> Message;
 
 	struct MessageS {
+		MessageS() : isDone(false) {}
 		void done() {
+			isDone = true;
 			if(async)
 				waitCondition.notify_all();
 		}
 		~MessageS() {
 			done();
 		}
+		bool isDone;
 		MessageClient* sender;
 		MessageClient* receiver;
 		Message next; //next is the reply to this message
