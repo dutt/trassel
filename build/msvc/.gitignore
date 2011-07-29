@@ -3,4 +3,7 @@
 *.suo
 *.vcxproj.user
 Debug
+Debug_Static
 ipch
+Release
+Release_Static
