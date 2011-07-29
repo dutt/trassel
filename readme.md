@@ -37,6 +37,7 @@ Groups
 ------
 
 I've added support for groups. You can attach a number of message clients to a group and send a message to the group. There are two forwarding modes:
+
 * FIFO - The first client that checks for a new message gets it.
 * Broadcast - All clients get all messages.
 
