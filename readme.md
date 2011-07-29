@@ -33,6 +33,13 @@ Messages can be sent in two ways:
 
 Default operating mode is to send asynchronously and return directly, not waiting for the message to be handled or replied to.
 
+Groups
+------
+
+I've added support for groups. You can attach a number of message clients to a group and send a message to the group. There are two forwarding modes:
+* FIFO - The first client that checks for a new message gets it.
+* Broadcast - All clients get all messages.
+
 Other
 -----
 Each MessageClient is automatically assigned an ID and this is how the directed channel keep tracks on which message should be received by
@@ -47,27 +54,24 @@ the other hand means slightly messier code but on the other hand no virtual call
 
 Examples
 --------
-For a more complete example see src/main.cpp.
+For a more complete example see the code in the foldder test.
 
 Send async message, continue working directly:
     
 	BoolMsg bmsg;
 	bmsg.value = false;
-    cout <<(int)getID() <<": Sending false bool" <<endl;
     sendMessage(bmsg, mReceiver);
 
 Send message - wait until handled:
     
 	BoolMsg bmsg;
 	bmsg.value = true;
-	cout <<(int)getID() <<": Sending true bool" <<endl;
 	sendMessage(bmsg, mReceiver, false);
 
 Synd message and wait for reply. This assumes the reply is a BoolMsg, in reality you'd check what kind of message you got:
 
     StringMsg smsg;
 	smsg.value = "muffins";
-	cout <<(int)getID() <<": Sending string" <<endl;
     Message reply = sendMessage(bmsg, mReceiver, false, true);
     if(reply != 0) {
     	cout  <<(int)getID() <<": Got reply, was our message handled successfully? " (<<reply->boolMsg.value?"yes":"no") <<endl;
@@ -75,9 +79,12 @@ Synd message and wait for reply. This assumes the reply is a BoolMsg, in reality
 
 TOOD
 ----
-Support for task groups/pools. Two modes:
-	- Send to group and every memeber get the message(broadcast)
-	- Send to group and the first member to check for message get it(load balancing)
+Shutdown
+    Some way to wait for all current messages to be handled and then shut down.
 
 Suspend/Resume
 	Probably require implementation of system(not meant for the tasks)-messages.
+
+Other
+    Create wrappers so tasks doesn't get copied when the threads are started.
+	Set timeout for specific send():s
