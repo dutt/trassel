@@ -130,8 +130,6 @@ namespace trassel {
 
 	//
 	// Directed message channel
-	//template<class container_type, class id_type>
-	//id_type getID(container_type container) { throw std::exception("Need to create a specifier"); }
 	typedef boost::unique_lock<boost::mutex> lock;
 
 	template<class container_type = Message, class id_type = uint8>
