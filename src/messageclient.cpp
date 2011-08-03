@@ -2,7 +2,6 @@
 using namespace trassel;
 
 using namespace std;
-
 using namespace boost;
 
 uint8 MessageClient::lastID = 0;

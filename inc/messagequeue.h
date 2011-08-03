@@ -101,7 +101,7 @@ namespace trassel {
 	typedef std::shared_ptr<MessageS> Message;
 
 	struct MessageS {
-		MessageS() : isDone(false) {}
+		MessageS() : isDone(false), sender(0), receiver(0), next(0), previous(0), async(false) {}
 		void done() {
 			isDone = true;
 			if(async)

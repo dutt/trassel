@@ -31,13 +31,22 @@ namespace trassel {
 		uint8 getID(Message msg) { return msg->receiver->getID(); }
 	};
 
+	/*class ConcreteDirectedProducer : public DirectedProducer<Message, uint8> {
+	public:
+		ConcreteDirectedProducer(Channel<Message, uint8>* channel) : DirectedProducer(channel) {}
+	};
+
+	class ConcreteDirectedConsumer : public DirectedConsumer<Message, uint8> {
+	};
+*/
+
 	class Task : public MessageClient {
 	public:
 		Task(Channel<Message, uint8>* channel) : MessageClient(channel) {}
 
 		void operator()();
 	protected:
-		virtual void handleMessage(Message msg) PURE;
+		virtual void handleMessage(Message msg) =0;
 		virtual void quit() { }
 	};
 }
