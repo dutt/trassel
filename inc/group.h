@@ -25,7 +25,8 @@ namespace trassel {
 		void push(Message msg);
 		Message pop(uint8 id);
 
-		GroupMode::GroupMode_t getMode() { return mMode; }
+		inline GroupMode::GroupMode_t getMode() { return mMode; }
+		inline void setMode(GroupMode::GroupMode_t mode) { mMode = mode; }
 	private:
 		Message popInternal(uint8 id, lock& waitLock);
 		std::map<uint8, std::queue<Message> > mClients;

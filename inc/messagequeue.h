@@ -4,7 +4,6 @@
 #include <boost/thread.hpp>
 #include "typedefs.h"
 #include <queue>
-#include "singelton.h"
 
 namespace trassel {
 	template<class value_type, class id_type>
