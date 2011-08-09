@@ -29,12 +29,6 @@
     <ClInclude Include="..\..\inc\messagequeue.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\singelton.h">
-      <Filter>inc</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\threadpool.h">
-      <Filter>inc</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\inc\timer.h">
       <Filter>inc</Filter>
     </ClInclude>

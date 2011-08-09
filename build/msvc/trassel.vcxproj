@@ -20,8 +20,6 @@
     <ClInclude Include="..\..\inc\group.h" />
     <ClInclude Include="..\..\inc\messageclient.h" />
     <ClInclude Include="..\..\inc\messagequeue.h" />
-    <ClInclude Include="..\..\inc\singelton.h" />
-    <ClInclude Include="..\..\inc\threadpool.h" />
     <ClInclude Include="..\..\inc\timer.h" />
     <ClInclude Include="..\..\inc\typedefs.h" />
   </ItemGroup>

@@ -80,12 +80,7 @@ Synd message and wait for reply. This assumes the reply is a BoolMsg, in reality
 
 TOOD
 ----
-Shutdown
-    Some way to wait for all current messages to be handled and then shut down.
 
-Suspend/Resume
-	Probably require implementation of system(not meant for the tasks)-messages.
-
-Other
-    Create wrappers so tasks doesn't get copied when the threads are started.
-	Set timeout for specific send():s
+* Shutdown - Some way to wait for all current messages to be handled and then shut down.
+* Suspend/Resume - will probably require implementation of system(not meant for the tasks)-messages.
+* Other - Set timeout for specific send():s

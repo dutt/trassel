@@ -6,6 +6,7 @@
 #include <queue>
 
 namespace trassel {
+
 	template<class value_type, class id_type>
 	class Channel {
 	public:

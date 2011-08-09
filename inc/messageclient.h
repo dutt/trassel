@@ -5,6 +5,7 @@
 #include "boost/date_time/posix_time/posix_time_types.hpp"
 
 namespace trassel {
+	class MessageClient; //Needed for the ClientRunner struct
 	class MessageClient : public DirectedConsumer<Message, uint8>, public DirectedProducer<Message, uint8> {
 		static uint8 lastID;
 		uint8 mID;
@@ -24,6 +25,21 @@ namespace trassel {
 		Message sendReply(Message previous, StringMsg& data, bool async = true, bool waitForReply = false);
 		Message sendMessage(DataMsg& data, MessageClient* receiver, bool async = true, bool waitForReply = false);
 		Message sendReply(Message previous, DataMsg& data, bool async = true, bool waitForReply = false);
+
+		virtual void operator()() = 0;
+
+		//Without this little hack boost::thread creates a copy when running the thread
+		struct ClientRunner {
+			ClientRunner(MessageClient& client) : mClient(client) {}
+			MessageClient& mClient;
+			void operator()() {
+				mClient();
+			}
+		};
+		void start() {
+			ClientRunner runner(*this);
+			new boost::thread(runner);
+		}
 	};
 
 	class ConcreteDirectedChannel : public DirectedChannel<Message, uint8> {
@@ -31,20 +47,12 @@ namespace trassel {
 		uint8 getID(Message msg) { return msg->receiver->getID(); }
 	};
 
-	/*class ConcreteDirectedProducer : public DirectedProducer<Message, uint8> {
-	public:
-		ConcreteDirectedProducer(Channel<Message, uint8>* channel) : DirectedProducer(channel) {}
-	};
-
-	class ConcreteDirectedConsumer : public DirectedConsumer<Message, uint8> {
-	};
-*/
-
 	class Task : public MessageClient {
 	public:
 		Task(Channel<Message, uint8>* channel) : MessageClient(channel) {}
 
 		void operator()();
+
 	protected:
 		virtual void handleMessage(Message msg) =0;
 		virtual void quit() { }
