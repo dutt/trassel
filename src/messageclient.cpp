@@ -7,7 +7,7 @@ using namespace boost;
 uint8 MessageClient::lastID = 0;
 
 MessageClient::MessageClient(Channel<Message, uint8>* channel, uint32 send_timeout)
-	: DirectedConsumer(channel), DirectedProducer(channel), mID(lastID++), mSendTimeout(0, 0, send_timeout)
+	: DirectedConsumer<Message, uint8>(channel), DirectedProducer<Message, uint8>(channel), mID(lastID++), mSendTimeout(0, 0, send_timeout)
 { }
 
 Message MessageClient::receiveMessage() {
