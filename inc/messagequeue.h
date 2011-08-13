@@ -101,7 +101,7 @@ namespace trassel {
 	typedef std::shared_ptr<MessageS> Message;
 
 	struct MessageS {
-		MessageS() : isDone(false), sender(0), receiver(0), next(0), previous(0), async(false) {}
+		MessageS() : isDone(false), sender(0), receiver(0), next(), previous(), async(false) {}
 		void done() {
 			isDone = true;
 			if(async)
@@ -162,7 +162,7 @@ namespace trassel {
 		container_type pop(id_type id) {
 			lock mlock(mMutex);
 			if(mQuit) {
-				return 0;
+				return Message();
 			}
 			else {
 				bool found = false;
@@ -171,7 +171,7 @@ namespace trassel {
 					while(mList.empty() && !mQuit)
 						mEmptyCondition.wait(mlock);
 					if(mQuit)
-						return 0;
+						return Message();
 					for(std::list<Message>::iterator it = mList.begin(); it != mList.end(); ++it) {
 						if(getID(*it) == id) {
 							ret = *it;

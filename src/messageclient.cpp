@@ -44,11 +44,11 @@ Message MessageClient::waitAsync(Message msg, bool waitForReply) {
 	else {
 		if(waitForReply) {
 			if(!msg->waitCondition.timed_wait(lock, mSendTimeout, Message_Has_Reply(msg)))
-				return 0;
+				return Message();
 		}
 		else {
 			if(!msg->waitCondition.timed_wait(lock, mSendTimeout, Message_Is_Done(msg)))
-				return 0;
+				return Message();
 		}
 	}
 	if(waitForReply) {
@@ -56,7 +56,7 @@ Message MessageClient::waitAsync(Message msg, bool waitForReply) {
 		return reply;
 	}
 	else
-		return 0;
+		return Message();
 }
 
 Message MessageClient::sendMessage(BoolMsg& data, MessageClient* receiver, bool async, bool waitForReply) {
@@ -66,7 +66,7 @@ Message MessageClient::sendMessage(BoolMsg& data, MessageClient* receiver, bool 
 	if(!async) {
 		return waitAsync(msg, waitForReply);
 	}
-	return 0;
+	return Message();
 }
 
 Message MessageClient::sendReply(Message previous, BoolMsg& data, bool async, bool waitForReply) {
@@ -80,7 +80,7 @@ Message MessageClient::sendReply(Message previous, BoolMsg& data, bool async, bo
 	if(!async) {
 		return waitAsync(msg, waitForReply);
 	}
-	return 0;
+	return Message();
 }
 
 Message MessageClient::sendReply(Message previous, StringMsg& data, bool async, bool waitForReply) {
@@ -92,7 +92,7 @@ Message MessageClient::sendReply(Message previous, StringMsg& data, bool async, 
 	if(!async) {
 		return waitAsync(msg, waitForReply);
 	}
-	return 0;
+	return Message();
 }
 
 Message MessageClient::sendReply(Message previous, DataMsg& data, bool async, bool waitForReply) {
@@ -104,7 +104,7 @@ Message MessageClient::sendReply(Message previous, DataMsg& data, bool async, bo
 	if(!async) {
 		return waitAsync(msg, waitForReply);
 	}
-	return 0;
+	return Message();
 }
 
 Message MessageClient::sendMessage(StringMsg& data, MessageClient* receiver, bool async, bool waitForReply) {
@@ -114,7 +114,7 @@ Message MessageClient::sendMessage(StringMsg& data, MessageClient* receiver, boo
 	if(!async) {
 		return waitAsync(msg, waitForReply);
 	}
-	return 0;
+	return Message();
 }
 
 Message MessageClient::sendMessage(DataMsg& data, MessageClient* receiver, bool async, bool waitForReply) {
@@ -124,7 +124,7 @@ Message MessageClient::sendMessage(DataMsg& data, MessageClient* receiver, bool 
 	if(!async) {
 		return waitAsync(msg, waitForReply);
 	}
-	return 0;
+	return Message();
 }
 
 void Task::operator()() {
