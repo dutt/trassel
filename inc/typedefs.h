@@ -1,6 +1,10 @@
 #ifndef _TYPEDEFS_
 #define _TYPEDEFS_
 
+#if !defined(WIN32) && !defined(_WIN32)
+# include <cstdint>
+#endif
+
 namespace trassel {
 	typedef unsigned int uint;
 	#define PURE =0
@@ -16,7 +20,6 @@ namespace trassel {
 	typedef unsigned __int32 uint32;
 	typedef unsigned __int64 uint64;
 #else
-	#include <stdint.h>
 	typedef int8_t int8;
 	typedef int16_t int16;
 	typedef int32_t int32;
