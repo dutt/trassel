@@ -88,7 +88,7 @@ namespace trassel {
 	};
 
 	namespace MsgType {
-		typedef enum MsgTypeEnum {
+        enum MsgTypeEnum {
 			BoolMsgType,
 			StringMsgType,
 			IntMsgType,
