@@ -51,7 +51,7 @@ Message Group::pop(uint8 id) {
 	lock mlock(mMutex);
 	if(mQuit) {
 		mlock.unlock();
-		return 0;
+		return Message();
 	}
 	else {
 		if(mMode == GroupMode::FIFO)

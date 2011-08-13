@@ -5,6 +5,8 @@
 #include <time.h>
 #include "timer.h"
 
+using namespace trassel;
+
 uint64 Timer::tick()
 {
     /* TODO: Replace with clock_gettime(CLOCK_MONOTONIC) if its usable? */
