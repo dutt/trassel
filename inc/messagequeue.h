@@ -149,7 +149,7 @@ namespace trassel {
 		void push(container_type data) {
 			lock mlock(mMutex);
 			if(mQuit) {
-				throw std::exception("Directed channel is shutting down");
+				throw std::runtime_error("Directed channel is shutting down");
 				return;
 			}
 			mList.push_back(data);
