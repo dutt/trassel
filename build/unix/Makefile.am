@@ -12,7 +12,8 @@ test_CXXFLAGS = @DEFINES@ @BOOST_CXXFLAGS@
 test_SOURCES = $(base_test)/directed_test.cpp $(base_test)/directed_test.h \
                $(base_test)/group_test.cpp $(base_test)/group_test.h \
                $(base_test)/main.cpp
-test_LDADD = libtrassel.la @BOOST_LIBS@
+test_LDADD = libtrassel.la @BOOST_ALIBS@
+test_LDFLAGS = @BOOST_SOLIBS@
 
 libtrassel_la_CXXFLAGS = @DEFINES@ @BOOST_CXXFLAGS@
 libtrassel_la_SOURCES = $(base_src)/group.cpp $(base_inc)/group.h \
