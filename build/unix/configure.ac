@@ -36,8 +36,23 @@ AS_IF([test "x$with_boost" = "xyes"],
 AS_IF([test "x$with_boost" = "xno"],
       AC_MSG_FAILURE([--without-boost was given but boost is needed]))
 BOOST_CXXFLAGS="-I${with_boost}/include"
-BOOST_LIBS="-L${with_boost}/lib64 -L${with_boost}/lib32 -L${with_boost}/lib -lboost_thread"
+BOOST_ALIBS=
+BOOST_SOLIBS=
+AC_ARG_ENABLE([link-static],
+              [AS_HELP_STRING([--enable-link-static], [link boost statically if possible])],
+              [], [enable_link_static=no])
+AS_IF([test "x$enable_link_static" = "xyes"],
+      [for subfix in lib64 lib32 lib; do
+         alib="${with_boost}/${subfix}/libboost_thread.a"
+         AS_IF([test -f "${alib}"],
+               [BOOST_ALIBS="${alib}"
+                break])
+       done])
+AS_IF([test -z "${BOOST_ALIBS}"],
+      [BOOST_SOLIBS="-L${with_boost}/lib64 -L${with_boost}/lib32 -L${with_boost}/lib -lboost_thread"],
+      [BOOST_SOLIBS="-pthread"])
 AC_SUBST(BOOST_CXXFLAGS)
-AC_SUBST(BOOST_LIBS)
+AC_SUBST(BOOST_ALIBS)
+AC_SUBST(BOOST_SOLIBS)
 
 AC_OUTPUT([Makefile])
