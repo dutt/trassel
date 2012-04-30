@@ -8,7 +8,7 @@ using namespace std;
 boost::mutex directedOutputMutex;
 vector<int> directedOutput;
 
-void log(int i) {
+static void log(int i) {
 	lock mlock(directedOutputMutex);
 	directedOutput.push_back(i);
 	mlock.unlock();
@@ -63,6 +63,8 @@ void TestDirectedConsumer::operator()() {
 	while(true) {
 		Message msg = receiveMessage();
 		if(!msg) {
+			int a = 2+3;
+			cout <<"quit" <<endl;
 			break; //stop checking for messages, false message means the system is shutting down.
 		}
 		cout <<(int)getID() <<": Message from " <<(int)msg->sender->getID() <<endl;
@@ -184,23 +186,26 @@ bool verify() {
 }
 
 bool test_directed_task() {
+	cout <<"directed task" <<endl;
 	ConcreteDirectedChannel channel;
 	TestDirectedTaskConsumer consumer(&channel);
 	TestDirectedProducer producer(&channel, &consumer);
 	new boost::thread(consumer);
 	new boost::thread(producer);
 	id_collection ids(consumer.getID(), producer.getID());
-	Timer::sleep(100);
+	Timer::sleep(500);
 	channel.close();
 	Timer::sleep(100); //wait for final console output
 	lock mlock(directedOutputMutex);
 	for(uint32 a = 0; a < directedOutput.size(); ++a)
 		cout <<directedOutput[a] <<", ";
 	cout <<endl;
+	channel.close();
 	return verify();
 }
 
 bool test_directed_client() {
+	cout <<"directed client" <<endl;
 	ConcreteDirectedChannel channel;
 	TestDirectedConsumer consumer(&channel);
 	TestDirectedProducer producer(&channel, &consumer);
@@ -209,18 +214,21 @@ bool test_directed_client() {
 	id_collection ids(consumer.getID(), producer.getID());
 	Timer::sleep(100); //wait for messages to be processed
 	channel.close();
-	Timer::sleep(10); //wait for final console output
+	Timer::sleep(100); //wait for final console output
 	lock mlock(directedOutputMutex);
 	for(uint32 a = 0; a < directedOutput.size(); ++a)
 		cout <<directedOutput[a] <<", ";
 	cout <<endl;
+	channel.close();
 	return verify();
 }
 
 void directed_test() {
 	bool client = test_directed_client();
 	directedOutput.clear();
+	cout <<"Test of directed client done" <<endl;
 	bool task = test_directed_task();
+	cout <<"Test of directed task done" <<endl;
 	if(client && task) {
 		cout <<"Test successful" <<endl;
 	}

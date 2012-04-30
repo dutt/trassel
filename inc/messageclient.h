@@ -21,8 +21,13 @@ namespace trassel {
 		Message receiveMessage();
 		Message sendMessage(BoolMsg& data,MessageClient* receiver, bool async = true, bool waitForReply = false);
 		Message sendReply(Message previous, BoolMsg& data, bool async = true, bool waitForReply = false);
+
+		Message sendMessage(IntMsg& data,MessageClient* receiver, bool async = true, bool waitForReply = false);
+		Message sendReply(Message previous, IntMsg& data, bool async = true, bool waitForReply = false);
+		
 		Message sendMessage(StringMsg& data, MessageClient* receiver, bool async = true, bool waitForReply = false);
 		Message sendReply(Message previous, StringMsg& data, bool async = true, bool waitForReply = false);
+		
 		Message sendMessage(DataMsg& data, MessageClient* receiver, bool async = true, bool waitForReply = false);
 		Message sendReply(Message previous, DataMsg& data, bool async = true, bool waitForReply = false);
 

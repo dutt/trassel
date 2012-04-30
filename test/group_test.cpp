@@ -1,5 +1,6 @@
 #include <iostream>
 #include <sstream>
+#include <map>
 using namespace std;
 
 #include "group_test.h"
@@ -9,6 +10,13 @@ using namespace trassel;
 boost::mutex groupOutputMutex;
 vector<int> groupOutput;
 
+static void log(int id) {
+	lock mlock(groupOutputMutex);
+	groupOutput.push_back(id);
+	mlock.unlock();
+}
+std::map<int, string> idToName;
+
 void TestGroupConsumer::operator()() {
 	while(true) {
 		Message msg = receiveMessage();	
@@ -16,28 +24,23 @@ void TestGroupConsumer::operator()() {
 		if(!msg) {
 			break; //stop checking for messages, false message means the system is shutting down.
 		}
-		cout <<(int)getID() <<": Message from " <<(int)msg->sender->getID() <<endl;
-		lock mlock(groupOutputMutex);
-		groupOutput.push_back(getID());
-		mlock.unlock();
+		cout <<idToName[(int)getID()] <<": Message from " <<idToName[(int)msg->sender->getID()] <<endl;
+		log(getID());
 	}	
 }
 
 void TestGroupProducer::operator()() {
 	try {
 		cout <<"Producer sending message group" <<endl;
-		BoolMsg bmsg;
-		bmsg.value = true;
-		sendMessage(bmsg, mReceiver);
-		lock mlock(groupOutputMutex);
-		groupOutput.push_back(getID());
-		mlock.unlock();
-		sendMessage(bmsg, mReceiver);
-		mlock.lock();
-		groupOutput.push_back(getID());
-		mlock.unlock();
+		IntMsg msg;
+		msg.value = 1;
+		sendMessage(msg, mReceiver);
+		log(getID());
+		++msg.value;
+		sendMessage(msg, mReceiver);
+		log(getID());
 	} catch(std::exception ex) {
-		cout <<"Failed to send true bool" <<ex.what() <<endl;
+		cout <<"Failed to send message to group: " <<ex.what() <<endl;
 	}
 }
 
@@ -156,6 +159,12 @@ bool test_helper(trassel::GroupMode::GroupMode_t mode) {
 	TestGroupConsumer tc1(&channel);
 	TestGroupProducer tpc(&channel, &tc1);
 	TestGroupProducer tpg(&channel, &group);
+	idToName.clear();
+	idToName[gc1.getID()] = "gc1";
+	idToName[gc2.getID()] = "gc2";
+	idToName[tc1.getID()] = "tc1";
+	idToName[tpc.getID()] = "tpc";
+	idToName[tpg.getID()] = "tpg";
 	id_collection coll(gc1.getID(), gc2.getID(), tc1.getID(), tpg.getID(), tpc.getID());
 	cout <<"gc1(" <<(int)gc1.getID() <<") gc2(" <<(int)gc2.getID() <<")" <<endl;
 	cout <<"tc1(" <<(int)tc1.getID() <<")" <<endl;
@@ -166,7 +175,8 @@ bool test_helper(trassel::GroupMode::GroupMode_t mode) {
 	new boost::thread(tpg);
 	new boost::thread(tc1);
 	new boost::thread(tpc);
-	Timer::sleep(100);
+	Timer::sleep(100); //handle all signals
+	group.quit();
 	channel.close();
 	lock mlock(groupOutputMutex);
 	for(uint32 a = 0; a < groupOutput.size(); ++a)
@@ -178,8 +188,9 @@ bool test_helper(trassel::GroupMode::GroupMode_t mode) {
 		return validate_producers_broadcast(groupOutput, coll);
 	else
 		return validate_producers_first(groupOutput, coll);
-
+	mlock.release();
 }
+
 bool test_FIFO() {
 	return test_helper(GroupMode::FIFO);
 }

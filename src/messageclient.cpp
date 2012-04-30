@@ -26,7 +26,7 @@ struct Message_Has_Reply {
 	Message msg;
 	Message_Has_Reply(Message sent_message) : msg(sent_message) {}
 	bool operator()() const {
-		return msg->next != 0;
+		return msg->next.get() != 0;
 	}
 };
 struct Message_Is_Done {
@@ -83,11 +83,9 @@ Message MessageClient::sendReply(Message previous, BoolMsg& data, bool async, bo
 	return Message();
 }
 
-Message MessageClient::sendReply(Message previous, StringMsg& data, bool async, bool waitForReply) {
-	Message msg = createMessage(previous->sender, MsgType::StringMsgType);
-	previous->next = msg;
-	msg->previous = previous;
-	msg->stringMsg = data;
+Message MessageClient::sendMessage(IntMsg& data, MessageClient* receiver, bool async, bool waitForReply) {
+	Message msg = createMessage(receiver, MsgType::IntMsgType);
+	msg->intMsg = data;
 	produce(msg);
 	if(!async) {
 		return waitAsync(msg, waitForReply);
@@ -95,11 +93,11 @@ Message MessageClient::sendReply(Message previous, StringMsg& data, bool async, 
 	return Message();
 }
 
-Message MessageClient::sendReply(Message previous, DataMsg& data, bool async, bool waitForReply) {
-	Message msg = createMessage(previous->sender, MsgType::DataMsgType);
+Message MessageClient::sendReply(Message previous, IntMsg& data, bool async, bool waitForReply) {
+	Message msg = createMessage(previous->sender, MsgType::IntMsgType);
 	previous->next = msg;
 	msg->previous = previous;
-	msg->dataMsg = data;
+	msg->intMsg = data;
 	produce(msg);
 	if(!async) {
 		return waitAsync(msg, waitForReply);
@@ -117,8 +115,32 @@ Message MessageClient::sendMessage(StringMsg& data, MessageClient* receiver, boo
 	return Message();
 }
 
+Message MessageClient::sendReply(Message previous, StringMsg& data, bool async, bool waitForReply) {
+	Message msg = createMessage(previous->sender, MsgType::StringMsgType);
+	previous->next = msg;
+	msg->previous = previous;
+	msg->stringMsg = data;
+	produce(msg);
+	if(!async) {
+		return waitAsync(msg, waitForReply);
+	}
+	return Message();
+}
+
 Message MessageClient::sendMessage(DataMsg& data, MessageClient* receiver, bool async, bool waitForReply) {
 	Message msg = createMessage(receiver, MsgType::DataMsgType);
+	msg->dataMsg = data;
+	produce(msg);
+	if(!async) {
+		return waitAsync(msg, waitForReply);
+	}
+	return Message();
+}
+
+Message MessageClient::sendReply(Message previous, DataMsg& data, bool async, bool waitForReply) {
+	Message msg = createMessage(previous->sender, MsgType::DataMsgType);
+	previous->next = msg;
+	msg->previous = previous;
 	msg->dataMsg = data;
 	produce(msg);
 	if(!async) {

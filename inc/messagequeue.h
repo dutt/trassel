@@ -5,6 +5,9 @@
 #include "typedefs.h"
 #include <queue>
 
+#include <iostream>
+using namespace std;
+
 namespace trassel {
 
 	template<class value_type, class id_type>
@@ -80,6 +83,7 @@ namespace trassel {
 
 	struct IntMsg {
 		uint32 value;
+		static const uint32 len = sizeof(uint32);
 	};
 
 	struct DataMsg {
@@ -142,6 +146,9 @@ namespace trassel {
 			close();
 		}
 		void close() {
+			cout <<"closing" <<endl;
+			if(mQuit)
+				return;
 			lock mlock(mMutex);
 			mQuit = true;
 			mEmptyCondition.notify_all();
@@ -153,6 +160,7 @@ namespace trassel {
 				return;
 			}
 			mList.push_back(data);
+			cout <<mList.size() <<" items in queue" <<endl;
 			mlock.unlock();
 			mEmptyCondition.notify_all();
 		}
@@ -162,16 +170,21 @@ namespace trassel {
 		container_type pop(id_type id) {
 			lock mlock(mMutex);
 			if(mQuit) {
+				//cout <<"mQuit is true" <<endl;
 				return Message();
 			}
 			else {
+				//cout <<"mQuit false" <<endl;
 				bool found = false;
 				Message ret;
 				while(!found) {
 					while(mList.empty() && !mQuit)
 						mEmptyCondition.wait(mlock);
 					if(mQuit)
+					{
+						//cout <<"mQuit2 is true" <<endl;
 						return Message();
+					}
 					for(std::list<Message>::iterator it = mList.begin(); it != mList.end(); ++it) {
 						if(getID(*it) == id) {
 							ret = *it;

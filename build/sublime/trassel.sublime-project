@@ -1,0 +1,19 @@
+{
+	"build_systems":
+	[
+		{
+			"cmd":
+			[
+				"make"
+			],
+			"name": "make",
+			"working_dir": "./../unix"
+		}
+	],
+	"folders":
+	[
+		{
+			"path": "/home/dutt/workspace/trassel"
+		}
+	]
+}

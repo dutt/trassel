@@ -73,7 +73,7 @@ Synd message and wait for reply. This assumes the reply is a BoolMsg, in reality
 
     StringMsg smsg;
 	smsg.value = "muffins";
-    Message reply = sendMessage(bmsg, mReceiver, false, true);
+    Message reply = sendMessage(smsg, mReceiver, false, true);
     if(reply != 0) {
     	cout  <<(int)getID() <<": Got reply, was our message handled successfully? " (<<reply->boolMsg.value?"yes":"no") <<endl;
     }

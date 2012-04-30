@@ -14,7 +14,8 @@ namespace trassel {
 	public:
 		Group(const Group& other);
 		Group(Channel<Message, uint8>* channel, GroupMode::GroupMode_t mode);
-
+		~Group();
+		
 		void attach(MessageClient* client);
 		void detach(MessageClient* client);
 		bool isAttached(MessageClient* client);

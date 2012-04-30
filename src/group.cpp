@@ -8,6 +8,10 @@ Group::Group(Channel<Message, uint8>* channel, GroupMode::GroupMode_t mode)
 			mClients[0] == std::queue<Message>();
 }
 
+Group::~Group() {
+	quit();
+}
+
 void Group::attach(MessageClient* client) {
 	if(mMode == GroupMode::Broadcast)
 		mClients[client->getID()] = std::queue<Message>();
@@ -38,9 +42,26 @@ void Group::handleMessage(Message msg) {
 }
 
 void Group::quit() {
+	while(mClients.size() > 0) { //wait for all messages to be processed
+		cout <<"loop1" <<endl;
+		for(ClientIt it = mClients.begin(); it != mClients.end(); ++it) {
+			cout <<"loop2" <<endl;
+			if(it->second.size() == 0) {
+				cout <<"Queue for " <<(int)it->first <<" was empty" <<endl;
+				mClients.erase(it);
+				it = mClients.begin();
+			} else {
+				cout <<"Queue for " <<(int)it->first <<" still has " <<it->second.size() <<" messages" <<endl;
+			}
+			cout <<"loop2.2" <<endl;
+		}
+		cout <<"loop1.2" <<endl;
+	}
+	cout <<"Queue cleaning is done" <<endl;
 	lock mlock(mMutex);
 	mQuit = true;
 	mlock.unlock();
+	cout <<"quit() is done" <<endl;
 }
 
 void Group::push(Message msg) {
