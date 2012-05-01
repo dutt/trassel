@@ -34,6 +34,14 @@ void TestDirectedTaskConsumer::handleMessage(Message msg) {
 			sendReply(msg, data);
 		}
 		break;
+	case MsgType::IntMsgType:
+		cout <<(int)getID() <<": Processing int";
+		for(int i = 0; i < 2; ++i) {
+			cout <<"." <<endl; 
+		}
+		cout <<"done" <<endl;
+		cout <<(int)getID() <<": Int " <<msg->intMsg.value <<endl;
+		break;
 	case MsgType::StringMsgType:
 		cout <<(int)getID() <<": Processing string";
 		log(6);
@@ -63,7 +71,6 @@ void TestDirectedConsumer::operator()() {
 	while(true) {
 		Message msg = receiveMessage();
 		if(!msg) {
-			int a = 2+3;
 			cout <<"quit" <<endl;
 			break; //stop checking for messages, false message means the system is shutting down.
 		}
@@ -86,6 +93,14 @@ void TestDirectedConsumer::operator()() {
 				log(2);
 				sendReply(msg, data);
 			}
+			break;
+		case MsgType::IntMsgType:
+			cout <<(int)getID() <<": Processing int";
+			for(int i = 0; i < 2; ++i) {
+				cout <<".";
+			}
+			cout <<"done" <<endl;
+			cout <<(int)getID() <<": Int: \"" <<msg->intMsg.value <<"\"" <<endl;
 			break;
 		case MsgType::StringMsgType:
 			cout <<(int)getID() <<": Processing string";
@@ -139,7 +154,9 @@ void TestDirectedProducer::operator()() {
 	}
 	try {
 		StringMsg smsg;
-		smsg.value = "muffins";
+		string text = "muffins";
+		smsg.len = text.size()+1;
+		;
 		cout <<(int)getID() <<": Sending string sync" <<endl;
 		log(5);
 		sendMessage(smsg, mReceiver, false);

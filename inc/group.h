@@ -23,7 +23,6 @@ namespace trassel {
 		void handleMessage(Message msg);
 		void quit();
 
-		void push(Message msg);
 		Message pop(uint8 id);
 
 		inline GroupMode::GroupMode_t getMode() { return mMode; }
@@ -35,7 +34,6 @@ namespace trassel {
 		GroupMode::GroupMode_t mMode;
 		bool mQuit;
 		boost::condition_variable mEmptyCondition;
-		typedef boost::unique_lock<boost::mutex> lock;
 		boost::mutex mMutex;
 	};
 }

@@ -2,7 +2,7 @@
 #define _MESSAGECLIENT_
 
 #include "messagequeue.h"
-#include "boost/date_time/posix_time/posix_time_types.hpp"
+#include "boost/date_time/posix_time/posix_time_types.hpp" //MessageClient::mSendTimeout
 
 namespace trassel {
 	class MessageClient; //Needed for the ClientRunner struct

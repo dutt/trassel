@@ -10,62 +10,71 @@ using namespace trassel;
 boost::mutex groupOutputMutex;
 vector<int> groupOutput;
 
-static void log(int id) {
+void logOutput(int id) {
+    //cout <<id <<" enter" <<endl;
 	lock mlock(groupOutputMutex);
 	groupOutput.push_back(id);
-	mlock.unlock();
+    mlock.unlock();
+    //cout <<id <<" exit" <<endl;
 }
 std::map<int, string> idToName;
+
+struct id_collection {
+	id_collection(trassel::uint8 gc1, trassel::uint8 gc2, trassel::uint8 tc1, trassel::uint8 tpg, trassel::uint8 tpc) {
+		gc1_id = gc1;
+		gc2_id = gc2;
+		tc1_id = tc1;
+		tpg_id = tpg;
+		tpc_id = tpc;
+	}
+	trassel::uint8 gc1_id;
+	trassel::uint8 gc2_id;
+	trassel::uint8 tc1_id;
+	trassel::uint8 tpg_id;
+	trassel::uint8 tpc_id;
+};
+id_collection* coll = 0;
 
 void TestGroupConsumer::operator()() {
 	while(true) {
 		Message msg = receiveMessage();	
-		cout <<"Consumer got message" <<endl;
 		if(!msg) {
 			break; //stop checking for messages, false message means the system is shutting down.
 		}
 		cout <<idToName[(int)getID()] <<": Message from " <<idToName[(int)msg->sender->getID()] <<endl;
-		log(getID());
+		logOutput(getID());
 	}	
 }
 
 void TestGroupProducer::operator()() {
 	try {
-		cout <<"Producer sending message group" <<endl;
+        string targetname = "none";
+        if(getID() == coll->tpg_id)
+            targetname = "group";
+        else if(getID() == coll->tpc_id)
+            targetname = "channel";
+		cout <<"Producer sending message 1 to " <<targetname <<endl;
 		IntMsg msg;
 		msg.value = 1;
 		sendMessage(msg, mReceiver);
-		log(getID());
+		logOutput(getID());
+        cout <<"Producer sending message 2 to " <<targetname <<endl;
 		++msg.value;
 		sendMessage(msg, mReceiver);
-		log(getID());
+		logOutput(getID());
 	} catch(std::exception ex) {
 		cout <<"Failed to send message to group: " <<ex.what() <<endl;
 	}
 }
 
-class GroupRunner {
+template<class T>
+class Runner {
 public:
-	GroupRunner(Group* group) : mGroup(group) {}
+	Runner(T* runnable) : mRunnable(runnable) {}
 	void operator()() {
-		mGroup->operator()();
+		mRunnable->operator()();
 	}
-	trassel::Group* mGroup;
-};
-
-struct id_collection {
-	id_collection(trassel::uint8 gc1, trassel::uint8 gc2, trassel::uint8 tc1, trassel::uint8 tpg, trassel::uint8 tpc) {
-		gc1_id = gc1;
-		producer_id = gc2;
-		dp_id = tc1;
-		tpg_id = tpg;
-		tpc_id = tpc;
-	}
-	trassel::uint8 gc1_id;
-	trassel::uint8 producer_id;
-	trassel::uint8 dp_id;
-	trassel::uint8 tpg_id;
-	trassel::uint8 tpc_id;
+	T* mRunnable;
 };
 
 bool validate_producers_broadcast(vector<int>& output, id_collection& ids) {
@@ -84,10 +93,10 @@ bool validate_producers_broadcast(vector<int>& output, id_collection& ids) {
 		else if(output[a] == ids.tpg_id) {
 			group_produced += 2;
 		}
-		else if(output[a] == ids.gc1_id || output[a] == ids.producer_id) {
+		else if(output[a] == ids.gc1_id || output[a] == ids.gc2_id) {
 			group_consumed++;
 		}
-		else if(output[a] == ids.dp_id)
+		else if(output[a] == ids.tc1_id)
 			channel_consumed++;
 		if(group_consumed > group_produced) {
 			cout <<"Position " <<(int)a <<" (" <<output[a] <<") is wrong. Consumed more messages from group than was produced" <<endl;
@@ -103,7 +112,7 @@ bool validate_producers_broadcast(vector<int>& output, id_collection& ids) {
 		success = false;
 	}
 	if(group_produced != group_consumed) {
-		cout <<"Number of group messages produced(" <<channel_produced <<")differ from number consumed(" <<channel_consumed <<")" <<endl;
+		cout <<"Number of group messages produced(" <<group_produced <<")differ from number consumed(" <<group_consumed <<")" <<endl;
 		success = false;
 	}
 	return success;
@@ -125,10 +134,10 @@ bool validate_producers_first(vector<int>& output, id_collection& ids) {
 		else if(output[a] == ids.tpg_id) {
 			group_produced++;
 		}
-		else if(output[a] == ids.gc1_id || output[a] == ids.producer_id) {
+		else if(output[a] == ids.gc1_id || output[a] == ids.gc2_id) {
 			group_consumed++;
 		}
-		else if(output[a] == ids.dp_id)
+		else if(output[a] == ids.tc1_id)
 			channel_consumed++;
 		if(group_consumed > group_produced) {
 			cout <<"Position " <<(int)a <<" (" <<output[a] <<") is wrong. Consumed more messages from group than was produced" <<endl;
@@ -144,7 +153,7 @@ bool validate_producers_first(vector<int>& output, id_collection& ids) {
 		success = false;
 	}
 	if(group_produced != group_consumed) {
-		cout <<"Number of group messages produced(" <<channel_produced <<")differ from number consumed(" <<channel_consumed <<")" <<endl;
+		cout <<"Number of group messages produced(" <<group_produced <<") differ from number consumed(" <<group_consumed <<")" <<endl;
 		success = false;
 	}
 	return success;
@@ -153,9 +162,11 @@ bool validate_producers_first(vector<int>& output, id_collection& ids) {
 bool test_helper(trassel::GroupMode::GroupMode_t mode) {
 	ConcreteDirectedChannel channel;
 	Group group(&channel, mode);
-	GroupRunner groupRunner(&group);
+	Runner<Group> groupRunner(&group);
 	TestGroupConsumer gc1(&group);
+    Runner<TestGroupConsumer> gc1_runner(&gc1);
 	TestGroupConsumer gc2(&group);
+    Runner<TestGroupConsumer> gc2_runner(&gc1);
 	TestGroupConsumer tc1(&channel);
 	TestGroupProducer tpc(&channel, &tc1);
 	TestGroupProducer tpg(&channel, &group);
@@ -165,30 +176,32 @@ bool test_helper(trassel::GroupMode::GroupMode_t mode) {
 	idToName[tc1.getID()] = "tc1";
 	idToName[tpc.getID()] = "tpc";
 	idToName[tpg.getID()] = "tpg";
-	id_collection coll(gc1.getID(), gc2.getID(), tc1.getID(), tpg.getID(), tpc.getID());
+    coll = new id_collection(gc1.getID(), gc2.getID(), tc1.getID(), tpg.getID(), tpc.getID());
 	cout <<"gc1(" <<(int)gc1.getID() <<") gc2(" <<(int)gc2.getID() <<")" <<endl;
 	cout <<"tc1(" <<(int)tc1.getID() <<")" <<endl;
 	cout <<"tpg(" <<(int)tpg.getID() <<") tpc(" <<(int)tpc.getID() <<")" <<endl;
 	new boost::thread(groupRunner);
-	new boost::thread(gc1);
-	new boost::thread(gc2);
+	new boost::thread(gc1_runner);
+	new boost::thread(gc2_runner);
 	new boost::thread(tpg);
 	new boost::thread(tc1);
 	new boost::thread(tpc);
-	Timer::sleep(100); //handle all signals
+	Timer::sleep(10000); //handle all signals
 	group.quit();
 	channel.close();
 	lock mlock(groupOutputMutex);
 	for(uint32 a = 0; a < groupOutput.size(); ++a)
-		cout <<groupOutput[a] <<", ";
+		cout <<idToName[groupOutput[a]] <<", ";
 	cout <<endl;
 	Timer::sleep(100); //wait for console output
 	bool success = false;
 	if(group.getMode() == GroupMode::Broadcast)
-		return validate_producers_broadcast(groupOutput, coll);
+		success = validate_producers_broadcast(groupOutput, *coll);
 	else
-		return validate_producers_first(groupOutput, coll);
-	mlock.release();
+		success = validate_producers_first(groupOutput, *coll);
+	mlock.unlock();
+    delete coll;
+	return success;
 }
 
 bool test_FIFO() {
@@ -200,9 +213,12 @@ bool test_broadast() {
 }
 
 void group_test() {
-	bool fifo = test_FIFO();
+	//bool fifo = test_FIFO();
+    bool fifo = true;
 	groupOutput.clear();
+    cout <<"FIFO test done" <<endl <<endl;
 	bool broadcast = test_broadast();
+    cout <<"Broadcast test done" <<endl;
 	if(fifo && broadcast) {
 		cout <<"Test succeeded" <<endl;
 	}

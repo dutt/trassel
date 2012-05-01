@@ -4,6 +4,7 @@
 #include <boost/thread.hpp>
 #include "typedefs.h"
 #include <queue>
+#include <tr1/memory>
 
 #include <iostream>
 using namespace std;
@@ -79,6 +80,11 @@ namespace trassel {
 	struct StringMsg {
 		char* value;
 		uint32 len;
+		void setValue(const char* text) {
+			len = strlen(text)+1;
+			value = new char[len];
+			strcpy(value, text);
+		}
 	};
 
 	struct IntMsg {
@@ -102,7 +108,7 @@ namespace trassel {
 
 	class MessageClient;
 	struct MessageS;
-	typedef std::shared_ptr<MessageS> Message;
+	typedef std::tr1::shared_ptr<MessageS> Message;
 
 	struct MessageS {
 		MessageS() : isDone(false), sender(0), receiver(0), next(), previous(), async(false) {}
@@ -132,10 +138,10 @@ namespace trassel {
 		boost::mutex mMutex;
 	};
 
+	typedef boost::unique_lock<boost::mutex> lock;
+    
 	//
 	// Directed message channel
-	typedef boost::unique_lock<boost::mutex> lock;
-
 	template<class container_type = Message, class id_type = uint8>
 	class DirectedChannel : public Channel<container_type, id_type> {
 	public:
@@ -146,7 +152,7 @@ namespace trassel {
 			close();
 		}
 		void close() {
-			cout <<"closing" <<endl;
+			//cout <<"closing" <<endl;
 			if(mQuit)
 				return;
 			lock mlock(mMutex);
@@ -160,7 +166,7 @@ namespace trassel {
 				return;
 			}
 			mList.push_back(data);
-			cout <<mList.size() <<" items in queue" <<endl;
+			//cout <<mList.size() <<" items in queue" <<endl;
 			mlock.unlock();
 			mEmptyCondition.notify_all();
 		}
@@ -198,7 +204,6 @@ namespace trassel {
 				}
 				return ret;
 			}
-			mlock.unlock();
 		}
 	private:
 		bool mQuit;

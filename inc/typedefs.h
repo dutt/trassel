@@ -2,11 +2,10 @@
 #define _TYPEDEFS_
 
 #if !defined(WIN32) && !defined(_WIN32)
-# include <cstdint>
+# include <stdint.h>
 #endif
 
 namespace trassel {
-	typedef unsigned int uint;
 	#define PURE =0
 
 #if defined(WIN32) || defined(_WIN32)
