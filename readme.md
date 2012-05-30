@@ -15,7 +15,7 @@ Status
 
 Currently trassel is fairly stable, I've tried to keep the feature and line count down to minimise the number of bugs that way.
 
-Probably no major rewrites or changes coming up.
+Probably no major changes client-wise coming up.
 
 Usage
 -----
@@ -83,4 +83,7 @@ TOOD
 
 * Shutdown - Some way to wait for all current messages to be handled and then shut down.
 * Suspend/Resume - will probably require implementation of system(not meant for the tasks)-messages.
-* Other - Set timeout for specific send():s
+* Cleanup - Currently the class hierarchy is a bit too convoluted due to an early attempt that turned out to be over-engineering.
+* Linux/OSX - The testcases are(lasts I  checked) passing on Windows but not on Linux/OSX. A bit ironic since now I'm almost only using Linux and OSX at home.
+* Specify thread for task - Some things, like graphics, need to be run from the same thread every time. It would be neat to support that. Until then the client code can always run graphics in a seperate thread.
+* Timeout - Set timeout for specific send() calls.
